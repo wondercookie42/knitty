@@ -111,7 +111,7 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  toolKey:'2. Symbol key (optional)',marked:'✓ marked',notYet:'not yet',
  keyOther:'The symbol key is on another picture',keyNone:'There is no symbol key: use the built-in symbol library',keySkip:'No symbol key: skipped',keyAdded:'Symbol key picture added',
  readBtn:'Read my chart →',whole:'My whole picture is just the chart',
- rotL:'↺ 90°',rotR:'90° ↻',fineT:'Fine tilt',keyOcr:'Reading the text of your symbol key…',keySays:'Your symbol key says: “{x}”',keyAuto:'I filled this in from your key.',delBox:'✕ Remove this box',straighten:'Straighten automatically',rotHint:'The photo is tilted? Use the slider or the ±1° buttons for a slow turn. Sideways? Use the 90° buttons. If only the chart is sideways, mark it first, then rotate just the chart.',
+ rotL:'↺ 90°',rotR:'90° ↻',fineT:'Fine tilt',keyOcr:'Reading the text of your symbol key…',keyWait:'The symbols will be matched to your key automatically; I only ask about ones I cannot match.',keyDoneT:'Matched with your symbol key:',keySays:'Your symbol key says: “{x}”',keyAuto:'I filled this in from your key.',delBox:'✕ Remove this box',straighten:'Straighten automatically',rotHint:'The photo is tilted? Use the slider or the ±1° buttons for a slow turn. Sideways? Use the 90° buttons. If only the chart is sideways, mark it first, then rotate just the chart.',
  markAgain:'Mark again',
  keyT:'Your symbol key',keyFound:'In your symbol key, this symbol is on this line:',keyNo:'I couldn\'t match this symbol to a line of your symbol key. Look through it yourself and find it.',keyLook:'Find this symbol in your symbol key and read what it says.',
  
@@ -144,7 +144,7 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  toolKey:'2. Условные обозначения (необязательно)',marked:'✓ отмечено',notYet:'ещё нет',
  keyOther:'Условные обозначения на другой картинке',keyNone:'Условных обозначений нет: используй встроенную библиотеку символов',keySkip:'Без условных обозначений',keyAdded:'Картинка с условными обозначениями добавлена',
  readBtn:'Прочитать схему →',whole:'Вся картинка — это только схема',
- rotL:'↺ 90°',rotR:'90° ↻',fineT:'Точный наклон',keyOcr:'Читаю текст ваших условных обозначений…',keySays:'В ваших условных обозначениях написано: «{x}»',keyAuto:'Я заполнил это по вашим условным обозначениям.',delBox:'✕ Убрать рамку',straighten:'Выровнять автоматически',rotHint:'Фото наклонено? Крутите ползунок или кнопки ±1° — поворот плавный. Лежит боком? Кнопки 90°. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
+ rotL:'↺ 90°',rotR:'90° ↻',fineT:'Точный наклон',keyOcr:'Читаю текст ваших условных обозначений…',keyWait:'Символы сопоставятся с вашими условными обозначениями сами; спрошу только о тех, что не удалось найти.',keyDoneT:'Сопоставлено с вашими условными обозначениями:',keySays:'В ваших условных обозначениях написано: «{x}»',keyAuto:'Я заполнил это по вашим условным обозначениям.',delBox:'✕ Убрать рамку',straighten:'Выровнять автоматически',rotHint:'Фото наклонено? Крутите ползунок или кнопки ±1° — поворот плавный. Лежит боком? Кнопки 90°. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
  markAgain:'Разметить заново',
  keyT:'Ваши условные обозначения',keyFound:'В ваших условных обозначениях этот символ на такой строке:',keyNo:'Не удалось найти этот символ в строках условных обозначений. Найдите его там сами.',keyLook:'Найдите этот символ в условных обозначениях и прочитайте, что там написано.',
  
@@ -271,7 +271,7 @@ function startKeyOcr(){
   if(!keyCv||!keyInfo) return; var myInfo=keyInfo; keyBusy=true;
   ocrEntries(keyCv,myInfo.lines).then(function(){ if(keyInfo!==myInfo) return; keyBusy=false;
       if(mode==='read'&&last){ last.clusters.forEach(function(k){ if(k.kind!=='sym'||confirmed[k.id]) return; var km=matchKey(k);
-        if(km&&km.d<0.45&&km.L.meaning&&km.L.votes>=2&&T.en.L[km.L.meaning.label]){ labels[k.id]=km.L.meaning.label; k.autoKey=true; } }); render(); } })
+        if(km&&km.d<0.45&&km.L.meaning&&km.L.votes>=2&&T.en.L[km.L.meaning.label]){ labels[k.id]=km.L.meaning.label; confirmed[k.id]=1; k.autoKey=true; } }); if(!ask().length) finished=true; render(); } })
     .catch(function(e){ keyBusy=false; if(window.console) console.log('ocr failed',e); if(mode==='read') render(); });
 }
 function readNow(firstTry){
@@ -284,7 +284,7 @@ function readNow(firstTry){
     if(score>best){ res=rr; a=v; } });
   if(!res.ok){ mode='mark'; failReason=firstTry?'firstFail':res.reason; last=null; render(); return; }
   cv.width=a.width; cv.height=a.height; cv.getContext('2d').drawImage(a,0,0);
-  last=res; mode='read'; failReason=null; labels={}; confirmed={}; idx=0; finished=false;
+  reviewAll=false; last=res; mode='read'; failReason=null; labels={}; confirmed={}; idx=0; finished=false;
   res.clusters.forEach(function(k){ if(k.sug.label&&k.sug.score>=0.8&&k.sug.margin>=0.05&&T.en.L[k.sug.label]){ labels[k.id]=k.sug.label; k.auto=true; } });
   // key
   keyCv=null; keyInfo=null;
@@ -310,7 +310,8 @@ function paintCells(only){
     cx.fillStyle=on?'rgba(224,36,94,.28)':'rgba(255,255,255,.55)'; cx.fillRect(q.x0,q.y0,q.x1-q.x0,q.y1-q.y0);
     if(on){ cx.strokeStyle='#e0245e'; cx.lineWidth=2; cx.strokeRect(q.x0+1,q.y0+1,q.x1-q.x0-2,q.y1-q.y0-2); } });
 }
-function ask(){ return last.clusters.filter(function(k){return k.kind==='sym';}); }
+var reviewAll=false;
+function ask(){ return last.clusters.filter(function(k){return k.kind==='sym'&&(reviewAll||!(k.autoKey&&confirmed[k.id]));}); }
 function autoKinds(){ last.clusters.forEach(function(k){ if(labels[k.id]===undefined){ if(k.kind==='blank') labels[k.id]='blank'; else if(k.kind==='filled') labels[k.id]='nostitch'; } }); }
 
 function render(){
@@ -336,6 +337,7 @@ function render(){
   autoKinds();
   var rows=rowsOf(last);
   if(finished){ doneView(rows); return; }
+  if(keyBusy&&keyCv){ paintCells(-1); side.innerHTML='<div class="card pop" style="display:grid;gap:10px"><h2>⏳ '+t('keyOcr')+'</h2><p class="muted" style="margin:0">'+t('keyWait')+'</p></div>'; return; }
   var q=ask(), n=q.length;
   if(!n){ finished=true; steps(); doneView(rows); return; }
   idx=Math.max(0,Math.min(idx,n-1));
@@ -412,7 +414,7 @@ $('side').addEventListener('click',function(e){
   else if(b.dataset.nav){ idx+=+b.dataset.nav; render(); }
   else if(b.dataset.fin){ finish(); }
   else if(b.dataset.i){ idx=+b.dataset.i; render(); }
-  else if(b.dataset.review){ finished=false; idx=0; render(); }
+  else if(b.dataset.review){ reviewAll=true; finished=false; idx=0; render(); }
   else if(b.dataset.go){ go(); }
 });
 function advance(q){ if(idx<q.length-1){ idx++; render(); } else finish(); }
@@ -422,12 +424,13 @@ function counts(rows){
   return rows.map(function(r){ var a=0,b=0; r.forEach(function(q){ var p=IO[labels[q.cl]]||[1,1]; a+=p[0]; b+=p[1]; }); return [a,b]; });
 }
 function doneView(rows){
-  paintCells(); var io=counts(rows), bad=[], unk=0;
+  var ovx=$('ov'); ovx.getContext('2d').clearRect(0,0,ovx.width,ovx.height); var io=counts(rows), bad=[], unk=0;
   io.forEach(function(p,i){ if(i>0&&Math.abs(p[0]-io[i-1][1])>0.01) bad.push(i); });
   last.clusters.forEach(function(k){ if(labels[k.id]==='unknown'||labels[k.id]==='cable') unk+=1; });
   var tab='<table><tbody>'+io.map(function(p,i){return '<tr><td>'+t('chkPer',{r:i+1,a:+p[0].toFixed(1),b:+p[1].toFixed(1)})+'</td></tr>';}).join('')+'</tbody></table>';
   var h='<div class="card pop" style="display:grid;gap:12px"><h2>'+(bad.length?'🧶 '+t('almost'):'🎉 '+t('doneT'))+'</h2>'+
     (bad.length?'<div class="msg bad">'+t('doneBad',{r:bad[0]+1,a:+io[bad[0]][0].toFixed(1),b:+io[bad[0]-1][1].toFixed(1)})+'</div>':'<div class="msg"><b>✓</b> '+t('doneOk',{n:rows.length})+'</div>')+
+    (last.clusters.some(function(k){return k.autoKey&&confirmed[k.id];})?'<div class="msg"><b>'+t('keyDoneT')+'</b><div style="display:grid;gap:6px;margin-top:8px">'+last.clusters.filter(function(k){return k.autoKey&&confirmed[k.id];}).map(function(k){ return '<div class="row" style="gap:8px">'+glyphs(labels[k.id])+'<span>'+t('L')[labels[k.id]][0]+'</span></div>'; }).join('')+'</div></div>':'')+
     (unk?'<div class="msg">'+t('doneUnk',{n:unk})+'</div>':'')+
     '<div class="row"><button class="btn" data-go="1"'+'>'+t('start')+'</button><button class="btn sec" data-review="1">'+t('review')+'</button></div>'+
     '<details><summary class="muted">'+t('tbl')+'</summary><div style="overflow-x:auto">'+tab+'</div></details></div>';
