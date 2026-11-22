@@ -91,9 +91,9 @@ function bandCov(ink,w,h,fixed,a,b,horiz,band){
 /* look a few pixels either side of the expected line for where the printed line really is (thin band, best coverage) */
 function bestEdge(ink,w,h,fixed,a,b,horiz,sr){
   var best={c:-1,p:fixed},d1,d2,t,n=Math.max(1,Math.round(b-a)),len=(horiz?w:h);
-  for(d1=-sr;d1<=sr;d1++) for(d2=-sr;d2<=sr;d2++){ if(Math.abs(d2-d1)>4) continue;
+  for(d1=-sr;d1<=sr;d1++) for(d2=-sr;d2<=sr;d2++){ if(Math.abs(d2-d1)>2) continue;
     var hit=0,tot=0;
-    for(t=Math.max(0,Math.round(a));t<=Math.min(len-1,Math.round(b));t++){ var u=(t-a)/n, off=Math.round(fixed+d1+(d2-d1)*u), ok=0, q;
+    for(t=Math.max(0,Math.round(a));t<=Math.min(len-1,Math.round(b));t+=2){ var u=(t-a)/n, off=Math.round(fixed+d1+(d2-d1)*u), ok=0, q;
       for(q=-1;q<=1;q++){ var xx=horiz?t:off+q, yy=horiz?off+q:t; if(xx>=0&&yy>=0&&xx<w&&yy<h&&ink[yy*w+xx]){ ok=1; break; } }
       hit+=ok; tot++; }
     var cv=tot?hit/tot:0, p=fixed+(d1+d2)/2;
@@ -145,6 +145,11 @@ function templates(){
     var d=c.getImageData(0,0,S,S).data, ink=new Uint8Array(S*S); for(var i=0;i<S*S;i++) ink[i]=d[4*i]<128?1:0;
     TPL.push({id:it.id,set:g[0],v:fingerprint(ink,S,0,0,S,S).v}); }); });
   return TPL;
+}
+function cellLabel(q){
+  var all=[]; templates().forEach(function(t){ var d=sdist(q.v,t.v); all.push({id:t.id,e:d+(RARE[t.id]?0.05:0),d:d}); });
+  all.sort(function(a,b){return a.e-b.e;}); var b0=all[0]; if(!b0||b0.d>0.30) return null;
+  var sec=all.filter(function(a){return a.id!==b0.id;})[0]; return (!sec||sec.e-b0.e>=0.04)?b0.id:null;
 }
 var RARE={sk2p:1,k3tog:1,ktbl:1,cable:1,inc3:1};
 function suggest(cl){
@@ -211,6 +216,11 @@ function analyzeCore(g,w,h,lenient,kf){
       if(fp0&&(sides>=4||fp0.mean>=0.03)){ var fp=fp0;
         cs.push({s:sides,r:r,c:c,x0:x0,y0:y0,x1:x1,y1:y1,v:fp.v,mean:fp.mean,kind:fp.mean<0.03?'blank':(fp.mean>0.5?'filled':'sym')}); } }
     cs=largestBlock(cs);
+    // cells whose borders were hidden by heavy neighbouring symbols: fill gaps inside each printed row
+    (function(){ var have={},rmin={},rmax={}; cs.forEach(function(q){ have[q.r+','+q.c]=1; rmin[q.r]=Math.min(rmin[q.r]===undefined?1e9:rmin[q.r],q.c); rmax[q.r]=Math.max(rmax[q.r]===undefined?-1:rmax[q.r],q.c); });
+      Object.keys(rmin).forEach(function(rk){ var rr=+rk; for(var cc=rmin[rk]+1;cc<rmax[rk];cc++){ if(have[rr+','+cc]) continue; if(!have[(rr-1)+','+cc]&&!have[(rr+1)+','+cc]) continue;
+        var gx0=xs[cc],gx1=xs[cc+1],gy0=ys[rr],gy1=ys[rr+1]; if(gx1===undefined||gy1===undefined) continue;
+        var fq=fingerprint(ink,w,gx0,gy0,gx1,gy1); cs.push({s:2,r:rr,c:cc,x0:gx0,y0:gy0,x1:gx1,y1:gy1,v:fq.v,mean:fq.mean,kind:fq.mean<0.03?'blank':(fq.mean>0.5?'filled':'sym'),filledIn:true}); } }); })();
     if(cs.length<(lenient?12:24)){ why='noGrid'; continue; }
     var s4=cs.filter(function(q){return q.s>=4;}).length/cs.length;
     (res.metrics.tries=res.metrics.tries||[]).push([Math.round(fx.m),Math.round(fy.m),cs.length,Math.round(s4*100)/100]);
@@ -246,6 +256,18 @@ function analyzeCore(g,w,h,lenient,kf){
     for(var ia=0;ia<cls.length&&!merged;ia++) for(var ib=ia+1;ib<cls.length&&!merged;ib++){
       var A=cls[ia],B=cls[ib]; if(A.kind!=='sym'||B.kind!=='sym') continue;
       if(sdist(A.v,B.v)<0.12){ var big=A.cells.length>=B.cells.length?A:B, small=big===A?B:A; small.cells.forEach(function(q){ q.cl=big.id; big.cells.push(q); }); cls.splice(cls.indexOf(small),1); merged=true; } } }
+  // a blurry group can hide two different library symbols (e.g. an arrow and an anchor): split by confident per-cell matches
+  cls.slice().forEach(function(k){
+    if(k.kind!=='sym'||k.cells.length<4) return;
+    var lab=k.cells.map(cellLabel), cnt={}; lab.forEach(function(l){ if(l) cnt[l]=(cnt[l]||0)+1; });
+    var keep=Object.keys(cnt).filter(function(l){return cnt[l]>=2;}); if(keep.length<2) return;
+    var means={}; keep.forEach(function(l){ var m=new Float32Array(N*N),n=0; k.cells.forEach(function(q,i){ if(lab[i]===l){ for(var z=0;z<m.length;z++) m[z]+=q.v[z]; n++; } }); for(var z=0;z<m.length;z++) m[z]/=n; means[l]=m; });
+    var groups={}; keep.forEach(function(l){ groups[l]=[]; });
+    k.cells.forEach(function(q,i){ var l=lab[i]; if(!l||!groups[l]){ var bd=9,bl=keep[0]; keep.forEach(function(x){ var d=sdist(q.v,means[x]); if(d<bd){ bd=d; bl=x; } }); l=bl; } groups[l].push(q); });
+    var nextId=cls.reduce(function(m,o){return Math.max(m,o.id);},0)+1;
+    keep.forEach(function(l,gi){ var g=groups[l], c;
+      if(gi===0){ c=k; c.cells=g; c.v=means[l]; c.rep=g[0]; } else { c={id:nextId++,kind:'sym',v:means[l],cells:g,rep:g[0]}; cls.push(c); }
+      g.forEach(function(q){ q.cl=c.id; }); }); });
   cls.sort(function(a,b){return b.cells.length-a.cells.length;});
   cls.forEach(function(k){ k.sug=suggest(k); });
   var symGroups=cls.filter(function(k){return k.kind==='sym';}).length;
@@ -293,25 +315,31 @@ function legendLines(g,w,h){
 }
 
 /* if the full area fails, retry with margins trimmed: titles, captions and neighbours often sit at the edges */
+function score(r){ return r&&r.ok?r.cells.length*(r.metrics.s4||0.5)*Math.min(1,(r.metrics.cov||0.5)/0.5):-1; }
 function analyze(g,w,h,lenient){
   var res=analyzeCore(g,w,h,lenient);
-  if(res.ok||['noGrid','irregular','blurry','noSymbols'].indexOf(res.reason)<0) return res;
-  // faint printing (grey lines on grey paper): look for fainter lines too
-  var kk=lenient?[0.92,0.96]:[];
-  for(var q=0;q<kk.length;q++){ var r2=analyzeCore(g,w,h,lenient,kk[q]); if(r2.ok){ r2.sens=kk[q]; return r2; } }
-  var tries=[[0,.16,0,0],[0,0,0,.16],[0,.16,0,.16],[.06,.06,.06,.06],[.12,.12,.12,.12],[.2,.2,.2,.2]], first=res;
+  if(!lenient){ // whole picture: one quick pass only
+    return res; }
+  // user-marked region: try fainter line thresholds and trimmed margins, keep the best reading
+  var best=res.ok?res:null, first=res, bs=score(res);
+  if(!res.ok||(res.metrics.cov||1)<0.6){
+    [0.92,0.96].forEach(function(kk){ var r2=analyzeCore(g,w,h,lenient,kk); if(r2.ok&&score(r2)>bs){ best=r2; bs=score(r2); best.sens=kk; } else if(!first.ok&&!best&&r2.reason&&false){ first=r2; } });
+  }
+  if(best) return best;
+  if(['noGrid','irregular','blurry','noSymbols'].indexOf(res.reason)<0) return res;
+  var tries=[[0,.16,0,0],[0,0,0,.16],[0,.16,0,.16],[.06,.06,.06,.06],[.12,.12,.12,.12],[.2,.2,.2,.2]];
   for(var i=0;i<tries.length;i++){
     var f=tries[i], ox=Math.round(f[0]*w), oy=Math.round(f[1]*h), nw=w-ox-Math.round(f[2]*w), nh=h-oy-Math.round(f[3]*h);
     if(nw<200||nh<200) continue;
     var sub=new Uint8ClampedArray(nw*nh); for(var y=0;y<nh;y++) for(var x=0;x<nw;x++) sub[y*nw+x]=g[(y+oy)*w+x+ox];
     var rr=analyzeCore(sub,nw,nh,lenient);
-    if(rr.ok&&rr.metrics.s4>=(lenient?0.3:0.6)){
+    if(rr.ok&&rr.metrics.s4>=0.3){
       rr.cells.forEach(function(q){ q.x0+=ox; q.x1+=ox; q.y0+=oy; q.y1+=oy; });
       rr.w=w; rr.h=h; rr.trimmed=true; return rr;
     }
   }
   return first;
 }
-window.Reader={grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist,sdist:sdist};
+window.Reader={cellTop:function(v){var a=[];templates().forEach(function(t){a.push([t.id,Math.round(sdist(v,t.v)*100)/100]);});a.sort(function(x,y){return x[1]-y[1];});return a.slice(0,3);},binarize:binarize,grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist,sdist:sdist};
 
 })();

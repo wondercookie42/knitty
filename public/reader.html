@@ -109,7 +109,7 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  markT:'Show me where things are',markIntro:'Draw a box around the chart. If the page also has a symbol key (the list that says what each symbol means) or written instructions, draw a box around each. A finger or the mouse both work.',
  toolChart:'1. The chart',toolText:'3. Written instructions (optional)',textT:'Written instructions',often:'Often drawn as',sameAs:'Same as one you already named',
  toolKey:'2. Symbol key (optional)',marked:'✓ marked',notYet:'not yet',
- keyOther:'The symbol key is on another picture',keyNone:'There is no symbol key; I\'ll choose meanings myself',keySkip:'No symbol key: skipped',keyAdded:'Symbol key picture added',
+ keyOther:'The symbol key is on another picture',keyNone:'There is no symbol key: use the built-in symbol library',keySkip:'No symbol key: skipped',keyAdded:'Symbol key picture added',
  readBtn:'Read my chart →',whole:'My whole picture is just the chart',
  rotL:'↺ 90°',rotR:'90° ↻',fineT:'Fine tilt',delBox:'✕ Remove this box',straighten:'Straighten automatically',rotHint:'The photo is tilted? Use the slider or the ±1° buttons for a slow turn. Sideways? Use the 90° buttons. If only the chart is sideways, mark it first, then rotate just the chart.',
  markAgain:'Mark again',
@@ -142,7 +142,7 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  markT:'Покажите, где что находится',markIntro:'Обведите рамкой схему. Если на странице есть ещё условные обозначения (список, что значит каждый символ) или текстовое описание, обведите рамкой и их. Можно пальцем или мышью.',
  toolChart:'1. Схема',toolText:'3. Текстовое описание (необязательно)',textT:'Текстовое описание',often:'Часто рисуют так',sameAs:'Так же, как один из уже названных',
  toolKey:'2. Условные обозначения (необязательно)',marked:'✓ отмечено',notYet:'ещё нет',
- keyOther:'Условные обозначения на другой картинке',keyNone:'Условных обозначений нет, значения выберу сам',keySkip:'Без условных обозначений',keyAdded:'Картинка с условными обозначениями добавлена',
+ keyOther:'Условные обозначения на другой картинке',keyNone:'Условных обозначений нет: используй встроенную библиотеку символов',keySkip:'Без условных обозначений',keyAdded:'Картинка с условными обозначениями добавлена',
  readBtn:'Прочитать схему →',whole:'Вся картинка — это только схема',
  rotL:'↺ 90°',rotR:'90° ↻',fineT:'Точный наклон',delBox:'✕ Убрать рамку',straighten:'Выровнять автоматически',rotHint:'Фото наклонено? Крутите ползунок или кнопки ±1° — поворот плавный. Лежит боком? Кнопки 90°. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
  markAgain:'Разметить заново',
@@ -242,7 +242,7 @@ $('markAgain').addEventListener('click',function(){ mode='mark'; finished=false;
 /* read the picture: first try the whole thing (clean charts need no marking), else ask the user to mark */
 function readNow(firstTry){
   var cv=$('cv'), reg=regionOf(src,boxes.chart), a=null, res=null;
-  variants(reg).forEach(function(v){
+  variants(reg,firstTry?1.5:undefined).slice(0,firstTry?1:9).forEach(function(v){
     var rr=Reader.analyze(Reader.grayFromCanvas(v),v.width,v.height,!!boxes.chart);
     var score=rr.ok?rr.cells.length*(rr.metrics.s4||0.5):-1, best=res?(res.ok?res.cells.length*(res.metrics.s4||0.5):-1):-2;
     if(score>best){ res=rr; a=v; } });
