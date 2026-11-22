@@ -21,10 +21,21 @@ Option B, Git-connected (auto-deploys on push): Cloudflare dashboard, Workers & 
 ## Add a language
 Copy the `en` block inside `STR`, translate, add an entry to `LANG_LIST`, run `npm test`.
 
-## Roadmap (not built yet)
-1. Upload + chart reader without ML calls: classical image processing (grid detection, symbol template matching), legend OCR/matching against a built-in symbol dictionary, user correction of low-confidence cells.
-2. "Can't explain this" diagnosis: not a chart / too blurry / no legend and unknown symbols / stitch counts don't add up, each with a specific ask.
-3. Parametric animation library (cables N held, M worked, front or back).
-4. Service worker for offline use, then Capacitor wrapper for the app stores.
+## Chart reader (`public/reader.html`, `public/reader.js`)
+Classic image processing, no ML, no network. Pipeline: quality gate (size, contrast, sharpness) -> adaptive binarize -> grid-line detection -> lattice fit (prefers square cells, weights long lines over in-cell strokes) -> cell existence (border coverage, largest connected block) -> cell fingerprints -> grouping -> dictionary suggestions -> user labels each group -> stitch-count check.
+Rejects non-charts with a specific reason and advice; drag a box on the picture to crop.
 
-Uploaded charts are copyrighted by their publishers: process on-device, don't store or redistribute them.
+Tested on: Russian hat chart (196/196 cells, 3 groups), German lace star (100/100 cells, round widths all correct), a text page (rejected).
+
+Known limits
+- Symbols spanning several cells (the 1-to-3 increase arc, wide cables) are split across cells and get mixed into neighbouring groups; the count check flags it, but groups can't be split by hand yet.
+- Suggestions come from a few stroke templates and are only pre-selected at high confidence; most groups need one tap.
+- Perspective-skewed or curved-page photos fail with an "irregular grid" message (no de-skew yet).
+- Not wired into the explainer yet: labelled groups do not yet produce a lesson.
+
+## Roadmap
+1. Merge groups / split a group by hand; multi-cell symbols; remember labels per publisher.
+2. Feed the labelled grid into the explainer (lessons and animations from the grid).
+3. Perspective correction; legend text recognition on-device.
+4. Parametric cable animations; Chinese and Japanese strings.
+5. Service worker for offline use, then Capacitor wrapper for the app stores.
