@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#a2476b">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
+[hidden]{display:none!important}
 /* Layout: interactive chart on the left, round-by-round inspector on the right, skippable lessons below. Language switcher top right. */
 :root{
   --bg:#f4f5f9; --surface:#ffffff; --fg:#1c2133; --muted:#586079; --line:#d6dae6;
@@ -217,6 +218,14 @@ td.num{font-variant-numeric:tabular-nums}
     starChartHint:'Every round is worked right to left. The rounds are numbered up the right side, and the chart widens as the star grows. Faded rounds are not drawn in the magazine. Tap a stitch, or use the arrow keys.',
     starChartAria:'Lace star chart, 12 rounds that widen from 5 to 15 stitches. Use the arrow keys to move between stitches.',
     starRoundSub:'Work right to left, then repeat these stitches 8 times around.',
+    upH1:'Your chart', upIntro:'Read from your picture. Tap any stitch to see what it means and watch how it is made. Compare with your original before you knit from it.',
+    upNote:'This chart was read from your picture on your device, then checked with you. Symbols you labelled are only as right as your answers, so compare with the original.',
+    upHint:'Rounds are numbered up the right side and worked right to left, as when knitting in the round. Tap a stitch, or use the arrow keys.',
+    upChartAria:'Your chart. Use the arrow keys to move between stitches.', patUp:'Your chart', upRoundsL:'Rounds', upWidthL:'Widest round', upWidthV:'{n} stitches',
+    upRoundSub:'Work right to left.', lgU:'symbol not identified',
+    upPBody:'Purl this stitch. It makes a small bump on the front, the opposite of a knit stitch.',
+    uTitle:'Symbol not identified', uBody:'You marked this symbol as not sure, so I cannot explain it yet. Look for a legend near your chart that names it.',
+    chipU:'?', tokU:'a symbol I could not identify',
     roundHS:'Round {r}',
     lgYo:'yarn over', lgK2:'knit 2 together, leans right', lgSkp:'slip 1, knit 1, pass over, leans left', lgInc:'one stitch into three: knit 1, yarn over, knit 1', lgGhost:'not drawn: knit every stitch and yarn over',
     chipYO:'yo', chipK2TOG:'k2tog', chipSKP:'skp', chipINC:'k1 yo k1',
@@ -342,6 +351,14 @@ td.num{font-variant-numeric:tabular-nums}
     starChartHint:'Каждый круг вяжется справа налево. Круги пронумерованы справа, схема расширяется по мере роста звезды. Бледные круги в журнале не нарисованы. Нажмите на петлю или используйте стрелки.',
     starChartAria:'Схема кружевной звезды, 12 кругов, ширина растёт с 5 до 15 петель. Стрелками на клавиатуре можно переходить между петлями.',
     starRoundSub:'Вяжите справа налево, затем повторите эти петли 8 раз по кругу.',
+    upH1:'Ваша схема', upIntro:'Прочитана с вашей картинки. Нажмите на любую петлю, чтобы узнать, что она значит, и посмотреть, как она вяжется. Перед вязанием сверьтесь с оригиналом.',
+    upNote:'Эта схема прочитана с вашей картинки на вашем устройстве и проверена вместе с вами. Подписанные вами символы верны настолько, насколько верны ваши ответы, поэтому сверьтесь с оригиналом.',
+    upHint:'Круги пронумерованы справа и вяжутся справа налево, как при вязании по кругу. Нажмите на петлю или используйте стрелки.',
+    upChartAria:'Ваша схема. Стрелками можно переходить между петлями.', patUp:'Ваша схема', upRoundsL:'Кругов', upWidthL:'Самый широкий круг', upWidthV:'{n} петель',
+    upRoundSub:'Вяжите справа налево.', lgU:'символ не определён',
+    upPBody:'Провяжите эту петлю изнаночной. Спереди она даёт маленький бугорок, наоборот лицевой петле.',
+    uTitle:'Символ не определён', uBody:'Вы отметили этот символ как неизвестный, поэтому объяснить его пока нельзя. Поищите рядом со схемой условные обозначения.',
+    chipU:'?', tokU:'символ, который не удалось определить',
     roundHS:'Круг {r}',
     lgYo:'накид', lgK2:'2 петли вместе лицевой, наклон вправо', lgSkp:'снять 1, провязать 1, протянуть снятую, наклон влево', lgInc:'из одной петли три: лицевая, накид, лицевая', lgGhost:'не нарисовано: все петли и накиды лицевыми',
     chipYO:'нак', chipK2TOG:'2 вм', chipSKP:'сн-лиц-пр', chipINC:'лиц нак лиц',
@@ -479,8 +496,21 @@ td.num{font-variant-numeric:tabular-nums}
     hat:{rows:14,rep:14,srcLang:'ru',lessons:['caston','knit','purl','incr','chart','slip','cableB','cableA','oval','crown']},
     star:{rows:12,rep:5,srcLang:'de',lessons:['sCast','knit','sChart','yo','k2tog','skp','inc3','sFinish']}
   };
+  var UP=null;
+  function upLessons(d){
+    var used={}; d.rows.forEach(function(r){ r.cells.forEach(function(c){ used[c]=1; }); });
+    var out=['knit']; if(used.p) out.push('purl'); if(used.yo) out.push('yo'); if(used.k2tog) out.push('k2tog'); if(used.skp) out.push('skp'); if(used.I) out.push('inc3');
+    return out;
+  }
+  (function(){ try{
+    if(/pattern=upload/.test(location.search)){
+      var d=JSON.parse(sessionStorage.getItem('knitUpload')||'null');
+      if(d&&d.rows&&d.rows.length){ UP=d; PATTERNS.up={rows:d.rows.length,rep:d.w,srcLang:'none',lessons:upLessons(d)}; PAT='up'; }
+    }
+  }catch(e){} })();
+  function lace(){ return PAT==='star'||PAT==='up'; }
   function rowsN(){ return PATTERNS[PAT].rows; }
-  function showSrc(){ return PATTERNS[PAT].srcLang==='ru' ? lang!=='ru' : true; }
+  function showSrc(){ if(PAT==='up') return false; return PATTERNS[PAT].srcLang==='ru' ? lang!=='ru' : true; }
 
   /* ---------- cable beanie data ---------- */
   var N=14, CELL=40, X0=8, Y0=34;
@@ -515,6 +545,7 @@ td.num{font-variant-numeric:tabular-nums}
   };
   var misread=false;
   function starRow(r){
+    if(PAT==='up'){ var u=UP.rows[r-1]; return {cells:u.cells,ghost:false,off:u.off}; }
     var s=STAR_ROWS[r], a, i;
     if(s){ a=s.split(' '); if(misread&&r===7) a[2]='k'; return {cells:a,ghost:false}; }
     var prev=starRow(r-1); a=[];
@@ -527,14 +558,15 @@ td.num{font-variant-numeric:tabular-nums}
     if(t0==='I'){ var f=idx; while(f>0&&row.cells[f-1]==='I') f--; return {t:'I',i:idx-f,f:f,l:f+2}; }
     return {t:t0};
   }
-  var CIN={k:1,p:1,v:1,A:1,B:1,yo:0,k2tog:2,skp:2};
+  var CIN={k:1,p:1,v:1,A:1,B:1,u:1,yo:0,k2tog:2,skp:2};
   function starCounts(){
-    var out=[], prev=PATTERNS.star.rep;
-    for(var r=1;r<=12;r++){
+    var out=[], R=rowsN(), prev=null;
+    for(var r=1;r<=R;r++){
       var row=starRow(r), inn=0, ni=0;
       row.cells.forEach(function(c){ if(c==='I') ni++; else inn+=CIN[c]; });
       inn+=ni/3;
-      out.push({r:r,inn:inn,out:row.cells.length,expect:prev,ok:inn===prev});
+      if(prev===null) prev=(PAT==='up')?inn:PATTERNS.star.rep;
+      out.push({r:r,inn:Math.round(inn*100)/100,out:row.cells.length,expect:prev,ok:Math.abs(inn-prev)<1e-6});
       prev=row.cells.length;
     }
     return out;
@@ -543,10 +575,10 @@ td.num{font-variant-numeric:tabular-nums}
     var out=[]; for(var r=1;r<=14;r++) out.push({r:r,inn:14,out:14,expect:14,ok:true});
     return out;
   }
-  function countsFor(){ return PAT==='star'?starCounts():hatCounts(); }
+  function countsFor(){ return lace()?starCounts():hatCounts(); }
 
-  function cellOf(r,c){ return PAT==='star'?starCell(r,c):hatCell(r,c); }
-  function widthOf(r){ return PAT==='star'?starRow(r).cells.length:N; }
+  function cellOf(r,c){ return lace()?starCell(r,c):hatCell(r,c); }
+  function widthOf(r){ return lace()?starRow(r).cells.length:N; }
   function roundTokens(r){
     var out=[], seen={}, w=widthOf(r);
     for(var c=1;c<=w;c++){
@@ -573,6 +605,7 @@ td.num{font-variant-numeric:tabular-nums}
     if(t0==='yo') return '<path d="M12 10V24A8 8 0 0 0 28 24V10"/>';
     if(t0==='k2tog') return '<path d="M10 11L20 32L30 11"/><text x="24" y="17" font-size="12" font-weight="700" fill="var(--fg)" stroke="none" font-family="Inter,system-ui,sans-serif">2</text>';
     if(t0==='skp') return '<path d="M20 7V32M12 24L20 32L28 24"/>';
+    if(t0==='u') return '<text x="20" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="var(--fg)" stroke="none" font-family="Inter,system-ui,sans-serif">?</text>';
     if(t0==='I') return cell.i===1?'<path d="M12 10V22A8 8 0 0 0 28 22V10"/>':'<path d="M20 7V33"/>';
     var d;
     if(t0==='B') d=(cell.i===1)?'M0 10H11L26 30H40':'M0 30H40';
@@ -581,7 +614,7 @@ td.num{font-variant-numeric:tabular-nums}
   }
   function groupCols(r,c){
     var cell=cellOf(r,c);
-    if(PAT==='star'){
+    if(lace()){
       if(cell.t!=='I') return [c,c];
       var w=widthOf(r); return [w-cell.l,w-cell.f];
     }
@@ -628,35 +661,38 @@ td.num{font-variant-numeric:tabular-nums}
     }
     svg.innerHTML=h;
   }
-  var SC=36, SCX=292, SY0=10;
+  var SY0=10;
   function drawStar(){
-    var R=12, h='', cs=starCounts(), i;
+    var R=rowsN(), h='', cs=starCounts(), i, SC=36, SCX=292, wmax=0;
+    if(PAT==='up'){ UP.rows.forEach(function(r){ wmax=Math.max(wmax,r.off+r.cells.length); }); SC=Math.max(14,Math.min(36,Math.floor(540/wmax))); }
+    function rx0(row,w){ return PAT==='up'?(10+row.off*SC):(SCX-w*SC/2); }
     svg.setAttribute('viewBox','0 0 608 '+(SY0+R*SC+10));
-    var cls={k:'k',yo:'v',k2tog:'B',skp:'A',I:'p'};
+    var cls={k:'k',yo:'v',k2tog:'B',skp:'A',I:'p',p:'p',u:'p'};
     for(var r=R;r>=1;r--){
-      var row=starRow(r), w=row.cells.length, x0=SCX-w*SC/2, y=SY0+(R-r)*SC;
+      var row=starRow(r), w=row.cells.length, x0=rx0(row,w), y=SY0+(R-r)*SC;
       for(var c=w;c>=1;c--){
         var cell=starCell(r,c), x=x0+(w-c)*SC;
         h+='<g data-r="'+r+'" data-c="'+c+'"'+(row.ghost?' class="ghostc"':'')+'><rect class="cell t-'+cls[cell.t]+'" x="'+x+'" y="'+y+'" width="'+SC+'" height="'+SC+'"/>'+
            '<g class="sym" transform="translate('+x+' '+y+') scale('+(SC/40)+')">'+symbolSVG(cell)+'</g></g>';
       }
-      var f=row.ghost?-1:row.cells.indexOf('I');
-      if(f>=0){ var ax=x0+f*SC, bx=x0+(f+3)*SC; h+='<path class="arc" d="M'+(ax+4)+' '+(y+SC-9)+'Q'+((ax+bx)/2)+' '+(y+SC+4)+' '+(bx-4)+' '+(y+SC-9)+'"/>'; }
+      for(var f=0;!row.ghost&&f<w;f++){
+        if(row.cells[f]==='I'&&(f===0||row.cells[f-1]!=='I')){ var ax=x0+f*SC, bx=x0+(f+3)*SC; h+='<path class="arc" d="M'+(ax+4)+' '+(y+SC-9)+'Q'+((ax+bx)/2)+' '+(y+SC+4)+' '+(bx-4)+' '+(y+SC-9)+'"/>'; }
+      }
       if(!cs[r-1].ok) h+='<rect class="badrow" x="'+x0+'" y="'+y+'" width="'+(w*SC)+'" height="'+SC+'" rx="3"/>';
     }
-    var rw=starRow(sel.r), sw=rw.cells.length, sx0=SCX-sw*SC/2, sy=SY0+(R-sel.r)*SC;
+    var rw=starRow(sel.r), sw=rw.cells.length, sx0=rx0(rw,sw), sy=SY0+(R-sel.r)*SC;
     h+='<rect class="band" x="'+sx0+'" y="'+sy+'" width="'+(sw*SC)+'" height="'+SC+'"/>';
     var gc=groupCols(sel.r,sel.c);
     h+='<rect class="pick" x="'+(sx0+(sw-gc[1])*SC+1.5)+'" y="'+(sy+1.5)+'" width="'+((gc[1]-gc[0]+1)*SC-3)+'" height="'+(SC-3)+'" rx="3"/>';
     for(i=1;i<=R;i++){
-      var wi=starRow(i).cells.length;
-      h+='<text class="axis rowlabel'+(i===sel.r?' on':'')+(cs[i-1].ok?'':' bad')+'" data-row="'+i+'" x="'+(SCX+wi*SC/2+10)+'" y="'+(SY0+(R-i)*SC+SC/2+5)+'">'+(cs[i-1].ok?'':'⚠ ')+i+'</text>';
+      var ri=starRow(i), wi=ri.cells.length;
+      h+='<text class="axis rowlabel'+(i===sel.r?' on':'')+(cs[i-1].ok?'':' bad')+'" data-row="'+i+'" x="'+(rx0(ri,wi)+wi*SC+10)+'" y="'+(SY0+(R-i)*SC+SC/2+5)+'">'+(cs[i-1].ok?'':'⚠ ')+i+'</text>';
     }
     svg.innerHTML=h;
   }
   function drawChart(){
-    if(PAT==='star') drawStar(); else drawHat();
-    svg.setAttribute('aria-label',t(PAT==='star'?'starChartAria':'chartAria'));
+    if(lace()) drawStar(); else drawHat();
+    svg.setAttribute('aria-label',t(PAT==='star'?'starChartAria':(PAT==='up'?'upChartAria':'chartAria')));
   }
   svg.addEventListener('click',function(e){
     var el=e.target.closest('[data-r],[data-row]');
@@ -678,7 +714,16 @@ td.num{font-variant-numeric:tabular-nums}
 
   function renderLegend(){
     var items, h='';
-    if(PAT==='star'){
+    if(PAT==='up'){
+      var used={}; UP.rows.forEach(function(r){ r.cells.forEach(function(c){ used[c]=1; }); });
+      items=[]; if(used.k) items.push({cell:{t:'k'},fill:'var(--surface)',key:'lgK'});
+      if(used.p) items.push({cell:{t:'p'},fill:'var(--cell-p)',key:'lgP'});
+      if(used.yo) items.push({cell:{t:'yo'},fill:'var(--cell-v)',key:'lgYo'});
+      if(used.k2tog) items.push({cell:{t:'k2tog'},fill:'var(--cell-b)',key:'lgK2'});
+      if(used.skp) items.push({cell:{t:'skp'},fill:'var(--cell-a)',key:'lgSkp'});
+      if(used.I) items.push({inc:true,key:'lgInc'});
+      if(used.u) items.push({cell:{t:'u'},fill:'var(--cell-p)',key:'lgU'});
+    }else if(PAT==='star'){
       items=[
         {cell:{t:'k'},fill:'var(--surface)',key:'lgK'},
         {cell:{t:'yo'},fill:'var(--cell-v)',key:'lgYo'},
@@ -709,19 +754,21 @@ td.num{font-variant-numeric:tabular-nums}
   }
 
   /* ---------- stitch explanations ---------- */
-  var LESSON_FOR={k:'knit',p:'purl',v:'slip',A:'cableA',B:'cableB',yo:'yo',k2tog:'k2tog',skp:'skp',I:'inc3'};
+  var LESSON_FOR={u:'knit',k:'knit',p:'purl',v:'slip',A:'cableA',B:'cableB',yo:'yo',k2tog:'k2tog',skp:'skp',I:'inc3'};
   function explainStar(r,c){
     var cell=cellOf(r,c), where=t('where',{c:c,r:r}), title, src, body, a=1, b=1;
     if(cell.t==='yo'){ title=t('yoTitle'); src='Umschlag'; body=t('yoBody'); a=0; }
     else if(cell.t==='k2tog'){ title=t('k2Title'); src='2 M re zusstr'; body=t('k2Body'); a=2; }
     else if(cell.t==='skp'){ title=t('skTitle'); src='2 M überzogen zusstr'; body=t('skBody'); a=2; }
     else if(cell.t==='I'){ title=t('inTitle',{i:3-cell.i}); src='aus 1 M 3 M herausstr: 1 M re, 1 U, 1 M re'; body=t('inBody'); a=1; b=3; }
+    else if(cell.t==='p'){ title=t('pTitle'); src=''; body=t('upPBody'); }
+    else if(cell.t==='u'){ title=t('uTitle'); src=''; body=t('uBody'); }
     else { title=t('kTitle'); src='1 M re'; body=t('kBody')+(cell.ghost?t('ghostBody'):''); }
     body+=' '+t('useLine',{a:a,b:b});
     return {where:where,title:title,src:src,body:body,lesson:LESSON_FOR[cell.t]};
   }
   function explain(r,c){
-    if(PAT==='star') return explainStar(r,c);
+    if(lace()) return explainStar(r,c);
     var cell=cellOf(r,c);
     var inBlock=(c>=9)?'left':((c>=2&&c<=7)?'right':null);
     var block=inBlock?t(inBlock==='left'?'blockLeft':'blockRight'):'';
@@ -748,14 +795,14 @@ td.num{font-variant-numeric:tabular-nums}
 
   /* ---------- round + stitch + count cards ---------- */
   function renderRound(){
-    var r=sel.r, toks=roundTokens(r), cs=countsFor()[r-1], star=(PAT==='star');
+    var r=sel.r, toks=roundTokens(r), cs=countsFor()[r-1], star=lace();
     var chips=toks.map(function(tk){ return '<span class="chip '+chipCls(tk.t)+'">'+chipText(tk)+'</span>'; }).join('');
     var sentence=cap(toks.map(plain).join(t('sep')))+t('stop');
     var note='';
     if(!star){ if(r===14) note=t('noteR14'); else if(r===1) note=t('noteR1'); else if(r===2) note=t('noteR2'); }
-    else { if(starRow(r).ghost) note=t('noteGhost'); else if(r===1) note=t('noteS1'); else if(r===12) note=t('noteS12'); }
+    else if(PAT==='star'){ if(starRow(r).ghost) note=t('noteGhost'); else if(r===1) note=t('noteS1'); else if(r===12) note=t('noteS12'); }
     var cnt='<p class="hint'+(cs.ok?'':' chk-bad')+'">'+(cs.ok?'✓ ':'⚠ ')+t('cntLine',{a:cs.inn,b:cs.out})+'</p>';
-    var h='<div class="stack" style="gap:4px"><h2>'+t(star?'roundHS':'roundH',{r:r})+'</h2><p class="muted small">'+t(star?'starRoundSub':'roundSub')+'</p></div>'+
+    var h='<div class="stack" style="gap:4px"><h2>'+t(star?'roundHS':'roundH',{r:r})+'</h2><p class="muted small">'+t(PAT==='up'?'upRoundSub':(star?'starRoundSub':'roundSub'))+'</p></div>'+
       '<div class="chips" aria-label="'+t('stitchesAria')+'">'+chips+'</div>'+
       '<p>'+sentence+'</p>'+
       (note?'<p class="hint">'+note+'</p>':'')+cnt+
@@ -778,11 +825,11 @@ td.num{font-variant-numeric:tabular-nums}
     var h='<h2>'+t('chkH')+'</h2>';
     if(!bad.length) h+='<p>✓ '+t('chkOk',{n:cs.length})+'</p>';
     else h+='<p class="chk-bad">⚠ '+t('chkBad',{r:bad[0].r,a:bad[0].inn,b:bad[0].expect})+'</p>';
-    if(PAT==='star'){
+    if(lace()){
       h+='<details><summary>'+t('chkShow')+'</summary><div class="scroll-x"><table><thead><tr><th>'+t('thRound')+'</th><th>'+t('chkUses')+'</th><th>'+t('chkBelow')+'</th><th></th></tr></thead><tbody>';
       cs.forEach(function(c){ h+='<tr><td class="num">'+c.r+'</td><td class="num">'+c.inn+'</td><td class="num">'+c.expect+'</td><td'+(c.ok?'':' class="chk-bad"')+'>'+(c.ok?'✓':'⚠')+'</td></tr>'; });
       h+='</tbody></table></div></details>';
-      h+='<div class="row-actions"><button type="button" id="misreadBtn">'+t(misread?'chkRestore':'chkSim')+'</button></div>';
+      if(PAT==='star') h+='<div class="row-actions"><button type="button" id="misreadBtn">'+t(misread?'chkRestore':'chkSim')+'</button></div>';
     }else h+='<p class="hint">'+t('chkHat')+'</p>';
     var el=document.getElementById('checkCard'); el.innerHTML=h;
     var mb=document.getElementById('misreadBtn');
@@ -1227,6 +1274,7 @@ td.num{font-variant-numeric:tabular-nums}
   /* ---------- language switcher + static text ---------- */
   var HDR={
     hat:{h1:'h1',intro:'intro',facts:[['yarnL','yarnV'],['needlesL','needlesV'],['headL','headV'],['stitchesL','stitchesV']],note:'note',hint:'chartHint'},
+    up:{h1:'upH1',intro:'upIntro',facts:[],note:'upNote',hint:'upHint'},
     star:{h1:'starH1',intro:'starIntro',facts:[['sYarnL','sYarnV'],['sNeedlesL','sNeedlesV'],['sSizeL','sSizeV'],['sRoundsL','sRoundsV']],note:'starNote',hint:'starChartHint'}
   };
   function applyStatic(){
@@ -1238,7 +1286,9 @@ td.num{font-variant-numeric:tabular-nums}
     document.getElementById('introP').textContent=t(H.intro);
     document.getElementById('noteP').textContent=t(H.note);
     document.getElementById('chartHintP').textContent=t(H.hint);
-    document.getElementById('facts').innerHTML=H.facts.map(function(f){ return '<span><b>'+t(f[0])+'</b> '+t(f[1])+'</span>'; }).join('');
+    document.getElementById('facts').innerHTML=(PAT==='up')?
+      '<span><b>'+t('upRoundsL')+'</b> '+UP.rows.length+'</span><span><b>'+t('upWidthL')+'</b> '+t('upWidthV',{n:UP.rows.reduce(function(m,r){return Math.max(m,r.cells.length);},0)})+'</span>':
+      H.facts.map(function(f){ return '<span><b>'+t(f[0])+'</b> '+t(f[1])+'</span>'; }).join('');
     var bar=document.getElementById('langBar');
     bar.setAttribute('aria-label',t('langLabel'));
     bar.innerHTML=LANG_LIST.map(function(l){
@@ -1246,8 +1296,8 @@ td.num{font-variant-numeric:tabular-nums}
     }).join('');
     var pb=document.getElementById('patBar');
     pb.setAttribute('aria-label',t('patLabel'));
-    pb.innerHTML=['hat','star'].map(function(p){
-      return '<button type="button" data-pat="'+p+'" aria-pressed="'+(p===PAT)+'">'+t(p==='hat'?'patHat':'patStar')+'</button>';
+    pb.innerHTML=['hat','star'].concat(UP?['up']:[]).map(function(p){
+      return '<button type="button" data-pat="'+p+'" aria-pressed="'+(p===PAT)+'">'+t(p==='hat'?'patHat':(p==='star'?'patStar':'patUp'))+'</button>';
     }).join('');
   }
   document.getElementById('patBar').addEventListener('click',function(e){

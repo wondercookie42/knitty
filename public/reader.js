@@ -170,13 +170,23 @@ function analyze(g,w,h){
   if(sym<3) return fail('noSymbols');
   if(sharp<25) res.warn='blurry';
   // clusters
+  var filled=cells.filter(function(q){return q.kind==='filled';}).length;
+  if(filled>0.5*cells.length) return fail('photo');
   var cls=[];
   cells.forEach(function(q){
     var key=q.kind, best=null;
-    cls.forEach(function(k){ if(k.kind!==q.kind) return; var d=q.kind==='sym'?dist(q.v,k.v):0; if(d<0.30&&(!best||d<best.d)) best={d:d,k:k}; });
+    cls.forEach(function(k){ if(k.kind!==q.kind) return; var d=q.kind==='sym'?dist(q.v,k.v):0; if(d<0.36&&(!best||d<best.d)) best={d:d,k:k}; });
     if(best){ best.k.cells.push(q); q.cl=best.k.id; }
     else { var k={id:cls.length,kind:q.kind,v:q.v,cells:[q],rep:q}; cls.push(k); q.cl=k.id; } });
+  // fold tiny groups (<=2 cells) into the nearest bigger group of the same kind when they are close enough
+  cls.slice().forEach(function(k){
+    if(k.kind!=='sym'||k.cells.length>2) return; var best=null;
+    cls.forEach(function(o){ if(o===k||o.kind!=='sym'||o.cells.length<=2) return; var d=dist(k.v,o.v); if(d<0.5&&(!best||d<best.d)) best={d:d,o:o}; });
+    if(best){ k.cells.forEach(function(q){ q.cl=best.o.id; best.o.cells.push(q); }); cls.splice(cls.indexOf(k),1); } });
+  cls.sort(function(a,b){return b.cells.length-a.cells.length;});
   cls.forEach(function(k){ k.sug=suggest(k); });
+  var symGroups=cls.filter(function(k){return k.kind==='sym';}).length;
+  if(symGroups>16) return fail('photo');
   res.clusters=cls; res.ok=true; return res;
   function fail(reason){ res.ok=false; res.reason=reason; return res; }
 }
