@@ -314,6 +314,36 @@ function legendLines(g,w,h){
   return out;
 }
 
+/* symbol key: split into columns, then one entry per text row that starts with a small boxed symbol:
+   the symbol's fingerprint (to match chart symbols) and where its text sits (to read the meaning) */
+function keyEntries(cv){
+  var w=cv.width,h=cv.height,g=grayFromCanvas(cv),ink=binarize(g,w,h,0.92),x,y,occ=new Uint8Array(w);
+  // drop long rules and page edges (they glue columns and rows together)
+  for(y=0;y<h;y++){ var rn=0; for(x=0;x<=w;x++){ if(x<w&&ink[y*w+x]) rn++; else { if(rn>=0.4*w) for(var q=x-rn;q<x;q++) ink[y*w+q]=0; rn=0; } } }
+  for(y=0;y<h;y++){ var rs2=0; for(x=0;x<w;x++) rs2+=ink[y*w+x]; if(rs2>0.33*w||y<0.025*h||y>0.975*h) for(x=0;x<w;x++) ink[y*w+x]=0; }
+  for(x=0;x<w;x++){ var cn=0; for(y=0;y<=h;y++){ if(y<h&&ink[y*w+x]) cn++; else { if(cn>=0.7*h) for(var q2=y-cn;q2<y;q2++) ink[q2*w+x]=0; cn=0; } } }
+  for(y=0;y<h;y++) for(x=0;x<w;x++) if(ink[y*w+x]&&(y<2||y>h-3||x<2||x>w-3)) ink[y*w+x]=0;
+  for(x=0;x<w;x++){ var cc0=0; for(y=0;y<h;y++) cc0+=ink[y*w+x]; if(cc0>3) occ[x]=1; }
+  var xs=-1,xe=-1; for(x=0;x<w;x++) if(occ[x]){ if(xs<0) xs=x; xe=x; } if(xs<0) return [];
+  var best=null,run=0,rs=0; for(x=xs;x<=xe+1;x++){ if(x<=xe&&!occ[x]){ if(!run) rs=x; run++; } else { if(run&&(!best||run>best.n)) best={s:rs,n:run}; run=0; } }
+  var cols=[[xs,xe]]; if(best&&best.n>=Math.max(10,0.03*w)&&best.s>0.25*w&&best.s<0.75*w) cols=[[xs,best.s-1],[best.s+best.n,xe]];
+  var out=[];
+  cols.forEach(function(col){
+    var rows=new Uint32Array(h); for(y=0;y<h;y++){ var s0=0; for(x=col[0];x<=col[1];x++) s0+=ink[y*w+x]; rows[y]=s0; }
+    var bands=[],st=-1,gap=0; for(y=0;y<=h;y++){ var on=y<h&&rows[y]>1; if(on){ if(st<0) st=y; gap=0; } else if(st>=0){ gap++; if(gap>2||y===h){ bands.push([st,y-gap]); st=-1; gap=0; } } }
+    bands.forEach(function(b){
+      var y0=b[0],y1=b[1],bh=y1-y0+1; if(bh<7||bh>90) return;
+      var cc=new Uint8Array(w); for(x=col[0];x<=col[1];x++) for(y=y0;y<=y1;y++) if(ink[y*w+x]){ cc[x]=1; break; }
+      var gs=-1; for(x=col[0];x<=col[1];x++) if(cc[x]){ gs=x; break; } if(gs<0) return;
+      var ge=gs,g0=0; for(x=gs;x<=col[1];x++){ if(cc[x]){ ge=x; g0=0; } else { g0++; if(g0>Math.max(2,0.3*bh)) break; } }
+      var gw=ge-gs+1; if(gw<0.6*bh||gw>2.4*bh) return;
+      var ts=-1; for(x=ge+1;x<=col[1];x++) if(cc[x]){ ts=x; break; } if(ts<0) return;
+      var te=ts; for(x=col[1];x>ts;x--) if(cc[x]){ te=x; break; }
+      out.push({x0:gs,x1:ge,y0:y0,y1:y1+1,tx0:ts,tx1:te,end:te,fp:fingerprint(ink,w,gs,y0,ge+1,y1+1).v});
+    }); });
+  return out;
+}
+
 /* if the full area fails, retry with margins trimmed: titles, captions and neighbours often sit at the edges */
 function score(r){ return r&&r.ok?r.cells.length*(r.metrics.s4||0.5)*Math.min(1,(r.metrics.cov||0.5)/0.5):-1; }
 function analyze(g,w,h,lenient){
@@ -340,6 +370,6 @@ function analyze(g,w,h,lenient){
   }
   return first;
 }
-window.Reader={cellTop:function(v){var a=[];templates().forEach(function(t){a.push([t.id,Math.round(sdist(v,t.v)*100)/100]);});a.sort(function(x,y){return x[1]-y[1];});return a.slice(0,3);},binarize:binarize,grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist,sdist:sdist};
+window.Reader={keyEntries:keyEntries,cellTop:function(v){var a=[];templates().forEach(function(t){a.push([t.id,Math.round(sdist(v,t.v)*100)/100]);});a.sort(function(x,y){return x[1]-y[1];});return a.slice(0,3);},binarize:binarize,grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist,sdist:sdist};
 
 })();

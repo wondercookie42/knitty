@@ -43,3 +43,8 @@ term for the legend: «Условные обозначения». Keep `tests/i1
 - Always test on the real sample photos (user is frustrated that earlier "tested" claims did not hold). Do not tune thresholds blindly:
   print `metrics.tries` (pitch, cells, s4 per lattice candidate), `hP`/`vP` peaks, and view `region()` output.
 - Commit footer: Co-Authored-By line and Claude-Session as required by the harness.
+
+## Key (legend) reading status
+- `Reader.keyEntries` splits the key into lines (glyph fingerprint + text box); each line is OCR'd in-browser (self-hosted Tesseract, `/vendor/tesseract/`) at 3 scales; `KeyDict.parse` maps text to a stitch label; majority vote.
+- Works well only when the photo is large enough. On the small pink page (577px wide) about 4 of 9 lines parse and some are wrong (e.g. "2 M re zus" read as 3). So the key meaning is a SUGGESTION the user confirms, shown with the key text; auto-prefill needs >=2 agreeing votes.
+- Not done: auto-find chart/key/text on a whole page, cables/multi-cell symbols, library learned in localStorage.
