@@ -1,0 +1,11 @@
+{
+  "name": "knit-chart-guide",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node tests/i18n-parity.js"
+  },
+  "devDependencies": { "wrangler": "^4" }
+}

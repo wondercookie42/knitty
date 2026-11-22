@@ -1,0 +1,1271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Knit Chart Guide</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#a2476b">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: interactive chart on the left, round-by-round inspector on the right, skippable lessons below. Language switcher top right. */
+:root{
+  --bg:#f4f5f9; --surface:#ffffff; --fg:#1c2133; --muted:#586079; --line:#d6dae6;
+  --accent:#a2476b; --on-accent:#ffffff;
+  --cell-p:#eceff6; --cell-v:#fcefcf; --cell-a:#dcf0f3; --cell-b:#e8e3f7;
+  --s1:#a2476b; --s2:#1f7a8c; --s3:#6c4fb8; --on-s:#ffffff;
+  --nl:#8b93ab; --nr:#7a839f; --nh:#c9cfdf; --nc:#9a8fb8; --y0:#aab1c6; --yarn:#d4739a; --bad:#b3261e;
+  --font-display:"Space Grotesk",Inter,system-ui,"PingFang SC","Hiragino Sans","Noto Sans CJK SC","Noto Sans CJK JP","Yu Gothic","Microsoft YaHei",sans-serif;
+  --font-body:Inter,system-ui,"PingFang SC","Hiragino Sans","Noto Sans CJK SC","Noto Sans CJK JP","Yu Gothic","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141e; --surface:#1a1f2e; --fg:#e8eaf2; --muted:#a3a9bf; --line:#333954;
+    --accent:#e48fae; --on-accent:#11141e;
+    --cell-p:#252b40; --cell-v:#4a3e1d; --cell-a:#1d3f46; --cell-b:#342c52;
+    --s1:#e48fae; --s2:#5cc0d3; --s3:#b6a0f2; --on-s:#11141e;
+    --nl:#6c7491; --nr:#7b84a3; --nh:#98a1bd; --nc:#8f86b4; --y0:#6a7290; --yarn:#e48fae; --bad:#ff8a80;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141e; --surface:#1a1f2e; --fg:#e8eaf2; --muted:#a3a9bf; --line:#333954;
+  --accent:#e48fae; --on-accent:#11141e;
+  --cell-p:#252b40; --cell-v:#4a3e1d; --cell-a:#1d3f46; --cell-b:#342c52;
+  --s1:#e48fae; --s2:#5cc0d3; --s3:#b6a0f2; --on-s:#11141e;
+  --nl:#6c7491; --nr:#7b84a3; --nh:#98a1bd; --nc:#8f86b4; --y0:#6a7290; --yarn:#e48fae; --bad:#ff8a80;
+  color-scheme:dark;
+}
+body{
+  background:var(--bg); color:var(--fg); font:15px/1.55 var(--font-body);
+  padding-block:24px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.25;text-wrap:balance}
+h1{font-size:28px}
+h2{font-size:19px}
+h3{font-size:16px}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.ru{font-size:13px;color:var(--muted);font-style:italic}
+header{display:flex;flex-direction:column;gap:10px}
+.head-top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-start;justify-content:space-between}
+header p{max-width:64ch}
+.lang,.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.lang button,.seg button{border:0;border-radius:0;padding:6px 12px;background:transparent;font:600 13px var(--font-body);color:var(--muted)}
+.lang button+button,.seg button+button{border-left:1px solid var(--line)}
+.lang button[aria-pressed="true"],.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.facts{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.facts b{color:var(--fg);font-weight:600}
+.main{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.chart-card{display:flex;flex-direction:column;gap:12px}
+#chart{width:100%;height:auto;display:block;border-radius:6px;touch-action:manipulation}
+#chart:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.cell{stroke:var(--line);stroke-width:1;cursor:pointer}
+.t-k{fill:var(--surface)} .t-p{fill:var(--cell-p)} .t-v{fill:var(--cell-v)}
+.t-A{fill:var(--cell-a)} .t-B{fill:var(--cell-b)}
+.sym path{fill:none;stroke:var(--fg);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.sym path.thin{stroke-width:1.6;opacity:.75}
+.band{fill:var(--accent);opacity:.13;pointer-events:none}
+.pick{fill:none;stroke:var(--accent);stroke-width:3;pointer-events:none}
+.axis{font:500 14px var(--font-body);fill:var(--muted)}
+.axis.on{fill:var(--accent);font-weight:700}
+.rowlabel{cursor:pointer}
+.bracket{stroke:var(--muted);stroke-width:1.5;fill:none}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:30px;height:30px;flex:none}
+.legend .sw{stroke:var(--line);stroke-width:1}
+.hint{font-size:13px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:2px 10px;border-radius:999px;border:1px solid var(--line);background:var(--cell-p);font:600 13px var(--font-body)}
+.chip.A{background:var(--cell-a)} .chip.B{background:var(--cell-b)} .chip.v{background:var(--cell-v)}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap}
+button{font:500 14px var(--font-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button[disabled]{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.lessons-head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.lessons{display:flex;flex-direction:column;gap:12px;max-width:820px}
+.lesson{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.lesson.skipped{padding:10px 16px;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.lesson.flash{border-color:var(--accent)}
+.lesson-top{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:space-between;align-items:flex-start}
+.lesson-title{display:flex;flex-direction:column;gap:3px;min-width:0}
+.level{display:inline-block;font:600 11px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lesson ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.seg{align-self:flex-start}
+.bars{display:flex;flex-wrap:wrap;gap:8px}
+.badrow{fill:none;stroke:var(--bad);stroke-width:2.5;pointer-events:none}
+.axis.bad{fill:var(--bad);font-weight:700}
+.ghostc .cell{fill:none;stroke-dasharray:3 3}
+.ghostc .sym{opacity:.4}
+.arc{fill:none;stroke:var(--fg);stroke-width:2;stroke-linecap:round;pointer-events:none}
+.chk-bad{color:var(--bad);font-weight:600}
+details summary{cursor:pointer;font-size:13px;color:var(--muted)}
+details table{margin-top:8px}
+.animset{display:flex;flex-direction:column;gap:8px;max-width:560px}
+.anim{display:flex;flex-direction:column;gap:8px;max-width:560px}
+.anim svg{width:100%;height:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;display:block}
+.nd{fill:var(--line)}
+.yarn{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:6 5}
+.cn{fill:none;stroke:var(--muted);stroke-width:2}
+.cn.back{stroke-dasharray:5 4}
+.albl{font:500 11px var(--font-body);fill:var(--muted)}
+.anim-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dots{display:flex;gap:6px;margin-left:auto}
+.dots button{width:28px;height:28px;padding:0;border-radius:999px;font-size:12px;font-variant-numeric:tabular-nums}
+.dots button[aria-current="step"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.anim .cap{min-height:3.2em;font-size:14px}
+.sub{margin-top:4px}
+.scroll-x{overflow-x:auto}
+table{border-collapse:collapse;font-size:14px;min-width:420px}
+th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums}
+.sched{display:grid;grid-template-columns:auto repeat(14,minmax(18px,1fr));gap:3px;align-items:center;font-size:12px;min-width:420px}
+.sched .lab{color:var(--muted);padding-right:8px;white-space:nowrap}
+.sched .rn{text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+.sched .b{height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:700;background:var(--cell-p);border:1px solid var(--line)}
+.sched .b.v{background:var(--cell-v)} .sched .b.x{background:var(--cell-a)}
+.note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;max-width:820px}
+@media (prefers-reduced-motion:no-preference){.lesson{transition:border-color .3s}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="head-top">
+      <h1 id="h1T"></h1>
+      <div class="bars"><div class="seg" id="patBar" role="group"></div><div class="lang" id="langBar" role="group"></div></div>
+    </div>
+    <p class="muted" id="introP"></p>
+    <div class="facts" id="facts"></div>
+  </header>
+
+  <section class="main">
+    <div class="card chart-card">
+      <h2 data-i18n="chartH"></h2>
+      <svg id="chart" viewBox="0 0 608 626" tabindex="0" role="group"></svg>
+      <div class="legend" id="legend"></div>
+      <p class="hint" id="chartHintP"></p>
+    </div>
+    <div class="stack">
+      <div class="card stack" id="roundCard" aria-live="polite"></div>
+      <div class="card stack" id="stitchCard" aria-live="polite"></div>
+      <div class="card stack" id="checkCard"></div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <div class="lessons-head">
+      <div class="stack" style="gap:4px">
+        <h2 data-i18n="lessonsH"></h2>
+        <p class="muted small" id="progress"></p>
+      </div>
+      <div class="row-actions">
+        <button type="button" id="skipBasics" data-i18n="skipBasics"></button>
+        <button type="button" id="resetSkips" data-i18n="showAll"></button>
+      </div>
+    </div>
+    <div class="lessons" id="lessons"></div>
+    <p class="note" id="noteP"></p>
+  </section>
+</div>
+
+<script>
+(function(){
+  /* =====================================================================
+     TRANSLATIONS
+     To add a language: copy the "en" block below, translate every value,
+     keep the keys and {placeholders}, then add one line to LANG_LIST.
+     Any missing key falls back to English.
+     ===================================================================== */
+  var LANG_LIST=[{code:'en',label:'EN',name:'English'},{code:'ru',label:'RU',name:'Русский'}];
+  /*STR_START*/
+  var STR={
+  en:{
+    h1:'Cable Beanie Guide',
+    intro:'The chart from your screenshot, turned into something you can tap. Pick any stitch to see what it means, step through the rounds, and skip the lessons you already know.',
+    yarnL:'Yarn', yarnV:'4 skeins Ornaghi Merino Maxi, 90 m / 50 g, held double',
+    needlesL:'Needles', needlesV:'circular, 4 mm (No. 4) and 5 mm (No. 5)',
+    headL:'Head', headV:'54–58 cm',
+    stitchesL:'Stitches', stitchesV:'14 per repeat × 6 = 84',
+    chartH:'Chart',
+    chartAria:'Cable chart, 14 stitches by 14 rounds. Use the arrow keys to move between stitches.',
+    chartHint:'Rounds are numbered up the right side. Work each round from the right edge to the left edge. Tap a stitch, or use the arrow keys.',
+    langLabel:'Language',
+    patLabel:'Pattern', patHat:'Cable beanie', patStar:'Lace star',
+    starH1:'Lace Star',
+    starIntro:'Chart A from a German magazine page, knitted in the round. The page prints a legend, a chart, and some rounds only in the text. This guide combines all three and checks that the stitch counts add up.',
+    sYarnL:'Cast on', sYarnV:'40 stitches, 8 repeats of 5',
+    sNeedlesL:'Needles', sNeedlesV:'double-pointed No. 2, crochet hook No. 1.25',
+    sSizeL:'Size', sSizeV:'small star, about 23 cm across',
+    sRoundsL:'Rounds', sRoundsV:'12, then finish with the crochet hook',
+    starNote:'This is a prototype. The chart was transcribed by hand from a scan. Rounds 2 and 4 are not drawn in the original, and its text says to knit every stitch and yarn over in an undrawn round, so they are shown faded. Check the chart against your own copy before you knit from it.',
+    starChartHint:'Every round is worked right to left. The rounds are numbered up the right side, and the chart widens as the star grows. Faded rounds are not drawn in the magazine. Tap a stitch, or use the arrow keys.',
+    starChartAria:'Lace star chart, 12 rounds that widen from 5 to 15 stitches. Use the arrow keys to move between stitches.',
+    starRoundSub:'Work right to left, then repeat these stitches 8 times around.',
+    roundHS:'Round {r}',
+    lgYo:'yarn over', lgK2:'knit 2 together, leans right', lgSkp:'slip 1, knit 1, pass over, leans left', lgInc:'one stitch into three: knit 1, yarn over, knit 1', lgGhost:'not drawn: knit every stitch and yarn over',
+    chipYO:'yo', chipK2TOG:'k2tog', chipSKP:'skp', chipINC:'k1 yo k1',
+    tokYO:'yarn over', tokK2TOG:'knit 2 together', tokSKP:'slip 1, knit 1, pass the slipped stitch over', tokINC:'knit 1, yarn over, knit 1 into one stitch',
+    noteGhost:'This round is not drawn in the chart. Knit every stitch and yarn over.',
+    noteS1:'Round 1: knit all 40 stitches. That is 8 repeats of 5.',
+    noteS12:'After round 12, finish with the crochet hook (see the finishing lesson).',
+    cntLine:'Per repeat: uses {a} stitches from the round below and makes {b}.',
+    useLine:'Uses {a} from the round below and makes {b}.',
+    yoTitle:'Yarn over', yoBody:'Bring the yarn over the right needle to make a new loop. It adds a stitch, leaves an eyelet hole, and takes no stitch from the round below.',
+    k2Title:'Knit 2 together', k2Body:'Knit the next two stitches as one. It removes a stitch and leans to the right. A yarn over beside it keeps the stitch count the same.',
+    skTitle:'Slip 1, knit 1, pass over', skBody:'Slip one stitch as if to knit, knit the next stitch, then lift the slipped stitch over it. It removes a stitch and leans to the left. A yarn over beside it keeps the stitch count the same.',
+    inTitle:'One stitch into three (part {i} of 3)', inBody:'These three cells grow out of one stitch of the round below: knit into it, make a yarn over, then knit into the same stitch again. This is how the star gets wider.',
+    ghostBody:' This round is not drawn in the chart.',
+    chkH:'Stitch count check', chkOk:'All {n} rounds add up: each round uses exactly the stitches the round below made.', chkBad:'Round {r} uses {a} stitches, but the round below makes {b}. One of the two rounds is probably misread.', chkHat:'Every symbol in this chart is one stitch in and one stitch out, so each round stays at 14 stitches per repeat.', chkSim:'Simulate a misread in round 7', chkRestore:'Restore the chart', chkUses:'Uses', chkBelow:'Round below makes', chkShow:'Show the table',
+    tagBack:'yarn at the back', tagFront:'yarn in front',
+    viewLabel:'Animation style', viewNeedles:'Needles and yarn', viewDiagram:'Diagram',
+    ovalLeft:'left oval', ovalRight:'right oval',
+    blockLeft:'left oval (columns 9 to 14)', blockRight:'right oval (columns 2 to 7)',
+    lgK:'knit', lgP:'purl', lgV:'slip, yarn at back', lgB:'cable B (3 stitches)', lgA:'cable A (3 stitches)',
+    chipK:'k{n}', chipP:'p{n}', chipV:'sl{n}', chipA:'cable A', chipB:'cable B',
+    tokK:'knit {n}', tokP:'purl {n}', tokV:'slip {n} with the yarn at the back', tokA:'cable A', tokB:'cable B',
+    sep:', ', stop:'.',
+    roundH:'Round {r}',
+    roundSub:'Work right to left, then repeat these 14 stitches 6 times around.',
+    stitchesAria:'Stitches in order',
+    noteR1:'Round 1 is worked once. On this round you also increase 8 stitches evenly, from 76 to 84.',
+    noteR2:'Rounds 1 and 2 are worked once, then you continue to round 3.',
+    noteR14:'After round 14, go back to round 3 and repeat rounds 3 to 14 until the hat is 2 to 2.5 repeats tall.',
+    prevR:'Previous round', nextR:'Next round',
+    where:'Column {c}, round {r}.',
+    pTitle:'Purl stitch', pBody:'Purl this stitch. Columns 1 and 8 are purl stitches in every round. They run straight up between the two ovals and keep each oval visually separate.',
+    kTitle:'Knit stitch', kBody:'Knit this stitch.',
+    kIdle:' Nothing crosses in the {block} this round, so you just knit across it.',
+    kPart:' This stitch is one of the six in the {block}, and it is knitted normally while its neighbours slip or cross.',
+    vTitle:'Slip stitch, yarn at back', vBody:'Slip this stitch from the left needle to the right needle without knitting it, keeping the working yarn behind. The two slipped stitches sit in the middle of the six in the {block}, and they come in the round before each crossing.',
+    aTitle:'Cable A (part {i} of 3)', aBody:'This cell belongs to a three-stitch cross that spans columns {c1} to {c2}. Slip 2 stitches onto a cable needle and hold them behind, knit the next stitch, then knit the 2 from the cable needle. It is worked first in its oval, because it sits on the right.',
+    bTitle:'Cable B (part {i} of 3)', bBody:'This cell belongs to a three-stitch cross that spans columns {c1} to {c2}. Slip 1 stitch onto a cable needle and hold it in front, knit the next 2 stitches, then knit the stitch from the cable needle. It is worked right after cable A.',
+    openLesson:'Open the lesson: {title}',
+    lessonsH:'Learn this pattern',
+    progress:'{n} of {total} lessons skipped. Lessons run from the basics to the cables.',
+    skipBasics:'I know the basics', showAll:'Show everything',
+    skipThis:'I know this', showAgain:'Show again', skippedTag:'(skipped)',
+    note:'This is a prototype built from one pattern. The chart and lessons here were transcribed by hand from the screenshot, so check the chart against the original before you knit from it. The finished app would read any chart you give it and write these lessons for it.',
+    lvBasic:'Basic', lvMid:'Intermediate', lvAdv:'Advanced',
+    play:'Play', pause:'Pause', back:'Back', next:'Next', goStep:'Go to step {n}',
+    animAria:'{label}, animated step by step',
+    lblLeft:'left needle', lblRight:'right needle', lblYarn:'yarn stays at the back',
+    lblCnFront:'cable needle, held in front', lblCnBack:'cable needle, held behind',
+    introCables:'Stitch numbers show the order you work them, with 1 on the right like in the chart. Use Back and Next to step through, or let it play.',
+    introCableA:'Stitch numbers show the order you work them, with 1 on the right like in the chart. The dashed pill is the cable needle holding stitches behind the work.',
+    schedAria:'Which rounds slip and which rounds cross, for each oval',
+    schedHint:'S = slip round, X = crossing round. Round numbers are along the top.',
+    subSsk:'Left-leaning decrease (slip, slip, knit)', subK2tog:'Right-leaning decrease (knit 2 together)',
+    thRound:'Round', thWork:'Work', thSts:'Stitches',
+    crownHint:'Stars mark the part you repeat around the whole round.',
+    crown:[
+      '*purl 1, left-leaning decrease, knit 2, right-leaning decrease*',
+      '*purl 1, left-leaning decrease, right-leaning decrease*',
+      '*purl 1, knit 2*',
+      '*purl 1, knit 2 together*',
+      '*purl 1, knit 1*',
+      'knit every pair of stitches together'],
+    crownCount:['84 to 60','60 to 36','36','36 to 24','24','24 to 12'],
+    lessons:{
+      caston:{title:'Cast on and join in the round',steps:['Cast on 76 stitches on the 4 mm circular needle, plus 1 extra stitch for joining.','Check that the cast-on edge lies flat all the way around with no twist.','Close the circle. A common way is to knit the extra stitch together with the first stitch, which leaves 76. Place a marker to show the start of the round.']},
+      knit:{title:'Knit stitch',steps:['Put the right needle into the front of the next stitch, from left to right.','Wrap the yarn around the right needle, counter-clockwise.','Pull the new loop through the old stitch.','Let the old stitch slide off the left needle.']},
+      purl:{title:'Purl stitch and 1×1 rib',steps:['Hold the yarn in front of the work.','Put the right needle into the front of the next stitch, from right to left.','Wrap the yarn counter-clockwise, pull the loop through and slide the old stitch off.','For the brim, alternate knit 1, purl 1 all the way around for 15 rounds. Work 32 rounds if you want a folded brim.']},
+      incr:{title:'Increase evenly, 76 to 84',steps:['Change to the 5 mm needle and start chart round 1.','During that round add 8 stitches spread evenly. 76 divided by 8 is 9.5, so increase about every 9 or 10 stitches.','The pattern does not name the increase. A make-one (lift the strand between stitches and knit it) is a common invisible choice.','You now have 84 stitches, which is 6 repeats of the 14-stitch chart.']},
+      chart:{title:'Read this chart in the round',steps:['Start at the bottom right cell. Round numbers are on the right edge.','Read each round from right to left. Because you knit in the round, every round is a right-side round, so each symbol means exactly what the legend says.','The 14 columns are one repeat. Work them 6 times to complete the round.','Work rounds 1 to 14 once. Then repeat rounds 3 to 14 until the hat is 2 to 2.5 repeats tall.']},
+      slip:{title:'Slip a stitch with the yarn at the back',steps:['Keep the working yarn behind the work.','Put the right needle into the next stitch as if to purl and move it across without knitting it.','Do the same for the second stitch. In this chart the slipped stitches always come in pairs.','Slipped stitches appear in the round before each crossing, so you will meet them right before a cable.']},
+      sCast:{title:'Cast on and join in the round',steps:['Cast on 40 stitches for the small star.','Spread the stitches over 4 double-pointed needles and join them into a round without twisting. Mark the start of the round.','The chart is one repeat of 5 stitches, worked 8 times per round (40 ÷ 5 = 8).']},
+      sChart:{title:'Read this chart in the round',steps:['Every round is worked from right to left, because you are knitting in the round.','The rounds are numbered up the right side. The chart is a triangle because the star grows: each repeat gets wider as the rounds go up.','Rounds 2 and 4 are not drawn. The text says to knit every stitch and yarn over in a round that is not drawn, so they appear faded here.','From round 5 on, every round is drawn. Work all 12 rounds once.','Use the stitch count check: each round must use exactly as many stitches as the round below made.']},
+      yo:{title:'Yarn over',steps:['Bring the yarn forward between the needles.','Lay it over the right needle, from front to back.','The loop on the needle counts as a stitch. In the next round you knit it like any other, and it leaves an eyelet hole.']},
+      k2tog:{title:'Knit 2 together',steps:['Put the right needle through the next two stitches at once, as if to knit.','Wrap the yarn and pull the loop through both.','Let both old stitches slide off. Two stitches have become one, leaning to the right.']},
+      skp:{title:'Slip 1, knit 1, pass over',steps:['Slip one stitch as if to knit, without working it.','Knit the next stitch.','Lift the slipped stitch over the knitted one and off the needle. Two stitches have become one, leaning to the left.']},
+      inc3:{title:'One stitch into three',steps:['Knit into the stitch but keep it on the left needle.','Make a yarn over.','Knit into the same stitch again, then let it drop. One stitch has become three: knit, yarn over, knit.']},
+      sFinish:{title:'Finish with the crochet hook',steps:['After round 12, take each group of stitches joined by an arc at the top of the chart onto the crochet hook and crochet them together. Between the groups, chain as many stitches as the numbers above the arcs say.','Fasten off at the end of the round. This lesson has no animation yet, because it uses a crochet hook.','Block the star into shape and let it dry, as the magazine describes.']},
+      cableB:{title:'Cable B: one stitch crosses in front',steps:[]},
+      cableA:{title:'Cable A: two stitches wait behind',steps:[]},
+      oval:{title:'Put an oval together',steps:['Each oval is six stitches wide and is made from one cable A and one cable B side by side, worked in the same round. Cable A comes first, then cable B.','Every crossing round follows a slip round. The round before each crossing has two slipped stitches in the middle of the oval.','The two ovals are offset. The left oval crosses in rounds 3, 5 and 7, the right oval in rounds 9, 11 and 13.','Round 14 is a slip round for the left oval, which is why repeating rounds 3 to 14 leads straight into the left oval crossing in round 3.']},
+      crown:{title:'Shape the crown',steps:['After the last chart repeat, work the six decrease rounds in the table. Stars mark the part you repeat around the round.','A left-leaning decrease is usually slip, slip, knit those two together. A right-leaning decrease is knit 2 together.','When 12 stitches remain, cut the yarn, thread it through all of them, and pull tight to close the top.']}
+    },
+    needle:{
+      yo:{label:'Yarn over',steps:['The yarn waits at the back after the last knit stitch. The next stitch waits on the left needle.','Bring the yarn forward between the needles, to the front of the work.','Lay the yarn over the right needle, from front to back. The loop on the needle is the yarn over.','Knit the next stitch as usual. The yarn over stays on the needle as a stitch of its own and leaves an eyelet hole in the next round.']},
+      skp:{label:'Slip, knit, pass over',steps:['Two stitches wait on the left needle. The yarn is at the back.','Slip the first stitch to the right needle as if to knit, without working it.','Put the right needle through the next stitch, as if to knit.','Wrap the yarn around the right needle tip.','Pull the new loop through and let the old stitch slide off.','Lift the slipped stitch over the new stitch and off the needle. Two stitches have become one, leaning to the left.']},
+      inc3:{label:'One stitch into three',steps:['One stitch waits on the left needle.','Knit into the stitch, but keep it on the left needle.','Make a yarn over.','Knit into the same stitch again.','Now let the old stitch slide off. One stitch has become three: knit, yarn over, knit.']},
+      knit:{label:'Knit stitch',steps:['The yarn is at the back. The stitch to work sits at the tip of the left needle, and the right needle waits.','Put the right needle tip through the front of the stitch, from left to right, so it sits under the left needle.','Wrap the yarn around the right needle tip, counter-clockwise.','Pull the new loop back through the old stitch with the right needle tip.','Let the old stitch slide off the left needle. The new loop is now a stitch on the right needle.']},
+      purl:{label:'Purl stitch',steps:['Hold the yarn in front of the work. The stitch to work sits at the tip of the left needle.','Put the right needle tip into the front of the stitch, from right to left, so it sits in front of the left needle.','Wrap the yarn around the right needle tip, counter-clockwise.','Pull the new loop back through the old stitch.','Let the old stitch slide off the left needle. The new loop is now a stitch on the right needle.']},
+      slip:{label:'Slip two stitches with the yarn at the back',steps:['Two stitches wait on the left needle. The yarn stays at the back.','Put the right needle into the first stitch as if to purl, from right to left.','Slide the stitch onto the right needle without knitting it. The second stitch moves up to the tip.','Slip the second stitch the same way. Nothing was knitted, so no new loop was made.']},
+      k2tog:{label:'Knit 2 together',steps:['Two stitches wait on the left needle.','Put the right needle through both stitches at once, as if to knit.','Wrap the yarn around the right needle tip.','Pull the new loop back through both stitches.','Let both old stitches slide off. Two stitches have become one, leaning to the right.']},
+      ssk:{label:'Slip, slip, knit',steps:['Two stitches wait on the left needle.','Slip the first stitch to the right needle as if to knit.','Slip the second stitch the same way. The two stitches have swapped order.','Slide the left needle through the fronts of both stitches, moving them back to the left needle.','Put the right needle through both stitches at once, as if to knit.','Wrap the yarn around the right needle tip.','Pull the new loop through and let both old stitches slide off. Two stitches have become one, leaning to the left.']},
+      cableB:{label:'Cable B',steps:['Three stitches wait on the left needle. The numbers show the order you work them.','Slide stitch 1 onto the cable needle and hold it in front of the work.','Knit stitches 2 and 3 from the left needle, as in the knit stitch lesson.','Knit stitch 1 from the cable needle. It has jumped over two stitches.']},
+      cableA:{label:'Cable A',steps:['Three stitches wait on the left needle. The numbers show the order you work them.','Slide stitches 1 and 2 onto the cable needle and hold them behind the work.','Knit stitch 3 from the left needle.','Knit stitches 1 and 2 from the cable needle. Stitch 3 has crossed to the other side of them.']}
+    },
+    anim:{
+      cableB:{label:'Cable B',steps:['Three stitches wait on the left needle. The numbers show the order you work them.','Slip stitch 1 onto the cable needle and hold it in front of the work.','Knit stitches 2 and 3 from the left needle.','Knit stitch 1 from the cable needle. It has jumped over two stitches.']},
+      cableA:{label:'Cable A',steps:['Three stitches wait on the left needle. The numbers show the order you work them.','Slip stitches 1 and 2 onto the cable needle and hold them behind the work.','Knit stitch 3 from the left needle.','Knit stitches 1 and 2 from the cable needle. Stitch 3 has crossed to the other side of them.']},
+      slip:{label:'Slip two stitches with the yarn at the back',steps:['Two stitches wait on the left needle. The yarn runs along the back.','Slip the first stitch to the right needle as if to purl. The yarn stays at the back.','Slip the second stitch the same way. Nothing was knitted, so no new loops were made.']},
+      k2tog:{label:'Knit 2 together, right-leaning decrease',steps:['Two stitches wait on the left needle.','Put the right needle through both stitches at once, as if to knit.','Knit them together. Two stitches become one, leaning to the right.']},
+      ssk:{label:'Slip, slip, knit, left-leaning decrease',steps:['Two stitches wait on the left needle.','Slip the first stitch to the right needle as if to knit.','Slip the second stitch the same way. The two stitches have swapped order.','Put the left needle through the fronts of both and knit them together. Two stitches become one, leaning to the left.']}
+    }
+  },
+  ru:{
+    h1:'Шапка с косами',
+    intro:'Схема из вашего скриншота, на которую можно нажимать. Выберите любую петлю, чтобы узнать, что она значит, пройдите ряды по порядку и пропустите уроки, которые вы уже знаете.',
+    yarnL:'Пряжа', yarnV:'4 мотка Ornaghi Merino Maxi, 90 м / 50 г, в два сложения',
+    needlesL:'Спицы', needlesV:'круговые № 4 и № 5',
+    headL:'Объём головы', headV:'54–58 см',
+    stitchesL:'Петли', stitchesV:'14 в раппорте × 6 = 84',
+    chartH:'Схема',
+    chartAria:'Схема кос, 14 петель на 14 рядов. Стрелками на клавиатуре можно переходить между петлями.',
+    chartHint:'Ряды пронумерованы справа. Каждый ряд вяжите от правого края к левому. Нажмите на петлю или используйте стрелки.',
+    langLabel:'Язык',
+    patLabel:'Схема', patHat:'Шапка с косами', patStar:'Кружевная звезда',
+    starH1:'Кружевная звезда',
+    starIntro:'Схема A со страницы немецкого журнала, вязание по кругу. На странице напечатаны условные обозначения, схема и часть кругов только текстом. Здесь всё это собрано вместе и проверяется, сходится ли число петель.',
+    sYarnL:'Набор', sYarnV:'40 петель, 8 раппортов по 5',
+    sNeedlesL:'Спицы', sNeedlesV:'чулочные № 2, крючок № 1,25',
+    sSizeL:'Размер', sSizeV:'малая звезда, около 23 см в поперечнике',
+    sRoundsL:'Круги', sRoundsV:'12, затем обвязать крючком',
+    starNote:'Это прототип. Схема переписана вручную со скана. Круги 2 и 4 в оригинале не нарисованы, а в тексте сказано провязывать все петли и накиды лицевыми в кругах без рисунка, поэтому они показаны бледно. Сверьте схему со своей копией перед вязанием.',
+    starChartHint:'Каждый круг вяжется справа налево. Круги пронумерованы справа, схема расширяется по мере роста звезды. Бледные круги в журнале не нарисованы. Нажмите на петлю или используйте стрелки.',
+    starChartAria:'Схема кружевной звезды, 12 кругов, ширина растёт с 5 до 15 петель. Стрелками на клавиатуре можно переходить между петлями.',
+    starRoundSub:'Вяжите справа налево, затем повторите эти петли 8 раз по кругу.',
+    roundHS:'Круг {r}',
+    lgYo:'накид', lgK2:'2 петли вместе лицевой, наклон вправо', lgSkp:'снять 1, провязать 1, протянуть снятую, наклон влево', lgInc:'из одной петли три: лицевая, накид, лицевая', lgGhost:'не нарисовано: все петли и накиды лицевыми',
+    chipYO:'нак', chipK2TOG:'2 вм', chipSKP:'сн-лиц-пр', chipINC:'лиц нак лиц',
+    tokYO:'накид', tokK2TOG:'2 петли вместе лицевой', tokSKP:'снять 1, провязать 1, протянуть снятую петлю', tokINC:'из одной петли: лицевая, накид, лицевая',
+    noteGhost:'Этот круг на схеме не нарисован. Провяжите все петли и накиды лицевыми.',
+    noteS1:'Круг 1: все 40 петель лицевыми. Это 8 раппортов по 5.',
+    noteS12:'После круга 12 обвяжите звезду крючком (см. урок про обвязку).',
+    cntLine:'На один раппорт: берёт {a} п. из предыдущего круга и создаёт {b}.',
+    useLine:'Берёт {a} из предыдущего круга и создаёт {b}.',
+    yoTitle:'Накид', yoBody:'Перекиньте нить через правую спицу, чтобы получилась новая петля. Она добавляет петлю, оставляет дырочку и не берёт петель из предыдущего круга.',
+    k2Title:'Две петли вместе лицевой', k2Body:'Провяжите две петли как одну. Убавка с наклоном вправо. Накид рядом сохраняет число петель.',
+    skTitle:'Снять 1, провязать 1, протянуть снятую', skBody:'Снимите одну петлю как для лицевой, провяжите следующую и протяните через неё снятую петлю. Убавка с наклоном влево. Накид рядом сохраняет число петель.',
+    inTitle:'Из одной петли три (часть {i} из 3)', inBody:'Эти три клетки вырастают из одной петли предыдущего круга: провяжите её, сделайте накид и провяжите ту же петлю ещё раз. Так звезда становится шире.',
+    ghostBody:' Этот круг на схеме не нарисован.',
+    chkH:'Проверка числа петель', chkOk:'Все {n} кругов сходятся: каждый круг берёт ровно столько петель, сколько создал предыдущий.', chkBad:'Круг {r} берёт {a} петель, а предыдущий создаёт {b}. Вероятно, один из двух кругов прочитан неверно.', chkHat:'Каждый символ на этой схеме берёт одну петлю и создаёт одну, поэтому в каждом ряду остаётся 14 петель на раппорт.', chkSim:'Имитировать ошибку чтения в круге 7', chkRestore:'Вернуть схему', chkUses:'Берёт', chkBelow:'Предыдущий создаёт', chkShow:'Показать таблицу',
+    tagBack:'нить за работой', tagFront:'нить перед работой',
+    viewLabel:'Стиль анимации', viewNeedles:'Спицы и нить', viewDiagram:'Диаграмма',
+    ovalLeft:'левый овал', ovalRight:'правый овал',
+    blockLeft:'левом овале (столбцы 9–14)', blockRight:'правом овале (столбцы 2–7)',
+    lgK:'лицевая', lgP:'изнаночная', lgV:'снятая петля, нить за работой', lgB:'коса B (3 петли)', lgA:'коса A (3 петли)',
+    chipK:'лиц {n}', chipP:'изн {n}', chipV:'сн {n}', chipA:'коса A', chipB:'коса B',
+    tokK:'лицевых {n}', tokP:'изнаночных {n}', tokV:'снять {n} с нитью за работой', tokA:'коса A', tokB:'коса B',
+    sep:', ', stop:'.',
+    roundH:'Ряд {r}',
+    roundSub:'Вяжите справа налево, затем повторите эти 14 петель 6 раз по кругу.',
+    stitchesAria:'Петли по порядку',
+    noteR1:'Ряд 1 вяжется один раз. В этом ряду равномерно прибавьте 8 петель: было 76, станет 84.',
+    noteR2:'Ряды 1 и 2 вяжутся один раз, затем переходите к ряду 3.',
+    noteR14:'После ряда 14 вернитесь к ряду 3 и повторяйте ряды с 3-го по 14-й, пока шапка не достигнет нужной длины (2–2,5 раппорта).',
+    prevR:'Предыдущий ряд', nextR:'Следующий ряд',
+    where:'Столбец {c}, ряд {r}.',
+    pTitle:'Изнаночная петля', pBody:'Провяжите эту петлю изнаночной. Столбцы 1 и 8 в каждом ряду состоят из изнаночных петель. Они идут прямо вверх между двумя овалами и отделяют их друг от друга.',
+    kTitle:'Лицевая петля', kBody:'Провяжите эту петлю лицевой.',
+    kIdle:' В этом ряду в {block} ничего не перекрещивается, поэтому просто вяжите лицевыми.',
+    kPart:' Эта петля входит в шесть петель в {block}. Её вяжут как обычно, пока соседние петли снимают или перекрещивают.',
+    vTitle:'Снятая петля, нить за работой', vBody:'Снимите эту петлю с левой спицы на правую, не провязывая её, нить остаётся за работой. Две снятые петли находятся посередине шести петель в {block} и встречаются в ряду перед каждым перекрестием.',
+    aTitle:'Коса A (часть {i} из 3)', aBody:'Эта клетка относится к перекрестию из трёх петель в столбцах {c1}–{c2}. Снимите 2 петли на вспомогательную спицу и оставьте за работой, провяжите следующую петлю лицевой, затем 2 петли со вспомогательной спицы лицевыми. Она вяжется в овале первой, потому что находится справа.',
+    bTitle:'Коса B (часть {i} из 3)', bBody:'Эта клетка относится к перекрестию из трёх петель в столбцах {c1}–{c2}. Снимите 1 петлю на вспомогательную спицу и оставьте перед работой, провяжите 2 лицевые петли, затем петлю со вспомогательной спицы лицевой. Она вяжется сразу после косы A.',
+    openLesson:'Открыть урок: {title}',
+    lessonsH:'Учимся вязать эту схему',
+    progress:'Пропущено уроков: {n} из {total}. Уроки идут от самых простых до кос.',
+    skipBasics:'Основы я знаю', showAll:'Показать всё',
+    skipThis:'Я это умею', showAgain:'Показать снова', skippedTag:'(пропущен)',
+    note:'Это прототип, собранный по одной схеме. Схема и уроки переписаны вручную со скриншота, поэтому сверьте схему с оригиналом перед вязанием. Готовое приложение будет читать любую схему и само писать для неё такие уроки.',
+    lvBasic:'Основы', lvMid:'Средний уровень', lvAdv:'Сложный уровень',
+    play:'Играть', pause:'Пауза', back:'Назад', next:'Далее', goStep:'Перейти к шагу {n}',
+    animAria:'{label}, анимация по шагам',
+    lblLeft:'левая спица', lblRight:'правая спица', lblYarn:'нить остаётся за работой',
+    lblCnFront:'вспом. спица перед работой', lblCnBack:'вспом. спица за работой',
+    introCables:'Цифры показывают порядок, в котором вы вяжете петли. Единица справа, как на схеме. Кнопками «Назад» и «Далее» можно листать шаги, а можно просто смотреть.',
+    introCableA:'Цифры показывают порядок, в котором вы вяжете петли. Единица справа, как на схеме. Пунктирная капсула — вспомогательная спица, на которой петли ждут за работой.',
+    schedAria:'В каких рядах петли снимают и в каких перекрещивают, для каждого овала',
+    schedHint:'С — ряд со снятыми петлями, X — ряд с перекрестием. Номера рядов сверху.',
+    subSsk:'Убавка с наклоном влево (снять, снять, провязать)', subK2tog:'Убавка с наклоном вправо (2 петли вместе лицевой)',
+    thRound:'Ряд', thWork:'Вязание', thSts:'Петли',
+    crownHint:'Звёздочки отмечают часть, которую повторяют по всему ряду.',
+    crown:[
+      '*1 изн., 2 п. вместе лицевой с наклоном влево, 2 лиц., 2 п. вместе лицевой с наклоном вправо*',
+      '*1 изн., 2 п. вместе лицевой с наклоном влево, 2 п. вместе лицевой с наклоном вправо*',
+      '*1 изн., 2 лиц.*',
+      '*1 изн., 2 п. вместе лицевой*',
+      '*1 изн., 1 лиц.*',
+      'все петли провязать по 2 вместе лицевой'],
+    crownCount:['84 → 60','60 → 36','36','36 → 24','24','24 → 12'],
+    lessons:{
+      caston:{title:'Набор петель и соединение в круг',steps:['Наберите 76 петель на круговые спицы № 4 и ещё 1 петлю для соединения.','Проверьте, что набранный край лежит ровно по всему кругу и не перекручен.','Замкните круг. Обычно лишнюю петлю провязывают вместе с первой, и остаётся 76. Поставьте маркер в начале ряда.']},
+      knit:{title:'Лицевая петля',steps:['Введите правую спицу в переднюю стенку следующей петли слева направо.','Оберните нить вокруг правой спицы против часовой стрелки.','Протяните новую петлю сквозь старую.','Сбросьте старую петлю с левой спицы.']},
+      purl:{title:'Изнаночная петля и резинка 1 на 1',steps:['Держите нить перед работой.','Введите правую спицу в переднюю стенку следующей петли справа налево.','Оберните нить против часовой стрелки, протяните петлю и сбросьте старую петлю.','Для резинки чередуйте 1 лицевую, 1 изнаночную по всему кругу, всего 15 рядов. Если хотите шапку с отворотом, свяжите 32 ряда.']},
+      incr:{title:'Равномерная прибавка: 76 → 84',steps:['Перейдите на спицы № 5 и начните ряд 1 схемы.','В этом ряду равномерно прибавьте 8 петель. 76 делить на 8 — это 9,5, поэтому прибавляйте примерно через каждые 9–10 петель.','В описании прибавка не названа. Часто выбирают накид из протяжки между петлями, потому что он малозаметен.','Теперь у вас 84 петли, то есть 6 раппортов по 14 петель.']},
+      chart:{title:'Как читать схему по кругу',steps:['Начните с правой нижней клетки. Номера рядов стоят справа.','Читайте каждый ряд справа налево. Так как вы вяжете по кругу, все ряды лицевые, и каждый символ означает ровно то, что сказано в условных обозначениях.','14 столбцов — это один раппорт. Повторите его 6 раз, чтобы получился целый ряд.','Свяжите ряды с 1-го по 14-й один раз, затем повторяйте ряды с 3-го по 14-й до нужной длины (2–2,5 раппорта).']},
+      slip:{title:'Снять петлю с нитью за работой',steps:['Держите рабочую нить за работой.','Введите правую спицу в следующую петлю как для изнаночной и перенесите её, не провязывая.','То же самое сделайте со второй петлёй. В этой схеме снятые петли всегда идут парой.','Снятые петли стоят в ряду перед каждым перекрестием, так что вы встретите их перед косой.']},
+      sCast:{title:'Набор петель и замыкание в круг',steps:['Наберите 40 петель для малой звезды.','Распределите петли на 4 чулочные спицы и замкните в круг без перекручивания. Отметьте начало круга.','Схема — один раппорт из 5 петель, который повторяют 8 раз в круге (40 ÷ 5 = 8).']},
+      sChart:{title:'Как читать схему по кругу',steps:['Каждый круг вяжется справа налево, потому что вы вяжете по кругу.','Круги пронумерованы справа. Схема — треугольник, потому что звезда растёт: с каждым кругом раппорт становится шире.','Круги 2 и 4 не нарисованы. В тексте сказано провязывать все петли и накиды лицевыми в кругах без рисунка, поэтому здесь они бледные.','Начиная с круга 5 каждый круг нарисован. Свяжите все 12 кругов один раз.','Пользуйтесь проверкой числа петель: каждый круг должен брать ровно столько петель, сколько создал предыдущий.']},
+      yo:{title:'Накид',steps:['Выведите нить вперёд между спицами.','Перекиньте её через правую спицу спереди назад.','Петля на спице считается петлёй. В следующем круге вы провяжете её как обычную, и останется дырочка.']},
+      k2tog:{title:'Две петли вместе лицевой',steps:['Введите правую спицу сразу в две следующие петли, как для лицевой.','Оберните нить и протяните петлю через обе.','Сбросьте обе старые петли. Две петли превратились в одну с наклоном вправо.']},
+      skp:{title:'Снять 1, провязать 1, протянуть снятую',steps:['Снимите одну петлю как для лицевой, не провязывая.','Провяжите следующую петлю.','Протяните снятую петлю через провязанную и снимите со спицы. Две петли превратились в одну с наклоном влево.']},
+      inc3:{title:'Из одной петли три',steps:['Провяжите петлю, но оставьте её на левой спице.','Сделайте накид.','Провяжите ту же петлю ещё раз и сбросьте её. Из одной петли получилось три: лицевая, накид, лицевая.']},
+      sFinish:{title:'Обвязка крючком',steps:['После круга 12 группы петель, соединённые дугами вверху схемы, снимите на крючок и свяжите вместе, между группами выполняя воздушные петли. Их число указано цифрами над дугами.','В конце круга закрепите нить. У этого урока пока нет анимации, потому что здесь нужен крючок.','Приведите звезду в форму: растяните её и дайте высохнуть, как описано в журнале.']},
+      cableB:{title:'Коса B: одна петля проходит спереди',steps:[]},
+      cableA:{title:'Коса A: две петли ждут за работой',steps:[]},
+      oval:{title:'Собираем овал',steps:['Каждый овал шириной в шесть петель состоит из косы A и косы B рядом, они вяжутся в одном ряду. Сначала коса A, потом коса B.','Каждому ряду с перекрестием предшествует ряд со снятыми петлями. В ряду перед перекрестием две снятые петли стоят посередине овала.','Овалы сдвинуты друг относительно друга. Левый овал перекрещивается в рядах 3, 5 и 7, правый — в рядах 9, 11 и 13.','Ряд 14 — ряд со снятыми петлями для левого овала, поэтому повторение рядов с 3-го по 14-й сразу ведёт к перекрестию левого овала в ряду 3.']},
+      crown:{title:'Убавления на макушке',steps:['После последнего раппорта свяжите шесть рядов убавок из таблицы. Звёздочки отмечают часть, которую повторяют по кругу.','Убавка с наклоном влево обычно делается так: снять, снять, провязать две петли вместе. Убавка с наклоном вправо — две петли вместе лицевой.','Когда останется 12 петель, оборвите нить, протяните её через все петли и крепко стяните макушку.']}
+    },
+    needle:{
+      yo:{label:'Накид',steps:['Нить ждёт за работой после последней лицевой петли. Следующая петля ждёт на левой спице.','Выведите нить вперёд между спицами, перед работой.','Перекиньте нить через правую спицу спереди назад. Петля на спице — это накид.','Провяжите следующую петлю как обычно. Накид остаётся на спице как отдельная петля и в следующем круге даёт дырочку.']},
+      skp:{label:'Снять, провязать, протянуть',steps:['Две петли ждут на левой спице. Нить за работой.','Снимите первую петлю на правую спицу как для лицевой, не провязывая.','Введите правую спицу в следующую петлю, как для лицевой.','Оберните нить вокруг кончика правой спицы.','Протяните новую петлю и сбросьте старую петлю.','Протяните снятую петлю через новую и снимите со спицы. Две петли превратились в одну с наклоном влево.']},
+      inc3:{label:'Из одной петли три',steps:['Одна петля ждёт на левой спице.','Провяжите петлю, но оставьте её на левой спице.','Сделайте накид.','Провяжите ту же петлю ещё раз.','Теперь сбросьте старую петлю. Из одной петли получилось три: лицевая, накид, лицевая.']},
+      knit:{label:'Лицевая петля',steps:['Нить находится за работой. Петля, которую нужно провязать, стоит на кончике левой спицы, правая спица ждёт.','Введите кончик правой спицы в переднюю стенку петли слева направо, под левую спицу.','Оберните нить вокруг кончика правой спицы против часовой стрелки.','Кончиком правой спицы протяните новую петлю назад сквозь старую.','Сбросьте старую петлю с левой спицы. Новая петля теперь лежит на правой спице.']},
+      purl:{label:'Изнаночная петля',steps:['Держите нить перед работой. Петля, которую нужно провязать, стоит на кончике левой спицы.','Введите кончик правой спицы в переднюю стенку петли справа налево, перед левой спицей.','Оберните нить вокруг кончика правой спицы против часовой стрелки.','Протяните новую петлю назад сквозь старую.','Сбросьте старую петлю с левой спицы. Новая петля теперь лежит на правой спице.']},
+      slip:{label:'Снять две петли с нитью за работой',steps:['Две петли ждут на левой спице. Нить остаётся за работой.','Введите правую спицу в первую петлю как для изнаночной, справа налево.','Переведите петлю на правую спицу, не провязывая её. Вторая петля подвигается к кончику.','Так же снимите вторую петлю. Ничего не провязано, новой петли не появилось.']},
+      k2tog:{label:'Две петли вместе лицевой',steps:['Две петли ждут на левой спице.','Введите правую спицу сразу в обе петли, как для лицевой.','Оберните нить вокруг кончика правой спицы.','Протяните новую петлю назад сквозь обе петли.','Сбросьте обе старые петли. Две петли превратились в одну с наклоном вправо.']},
+      ssk:{label:'Снять, снять, провязать',steps:['Две петли ждут на левой спице.','Снимите первую петлю на правую спицу как для лицевой.','Так же снимите вторую петлю. Две петли поменялись местами.','Проведите левую спицу через передние стенки обеих петель и переведите их назад на левую спицу.','Введите правую спицу сразу в обе петли, как для лицевой.','Оберните нить вокруг кончика правой спицы.','Протяните новую петлю и сбросьте обе старые петли. Две петли превратились в одну с наклоном влево.']},
+      cableB:{label:'Коса B',steps:['Три петли ждут на левой спице. Цифры показывают порядок вязания.','Переведите петлю 1 на вспомогательную спицу и оставьте перед работой.','Провяжите петли 2 и 3 с левой спицы (как в уроке про лицевую петлю).','Провяжите петлю 1 со вспомогательной спицы. Она перепрыгнула через две петли.']},
+      cableA:{label:'Коса A',steps:['Три петли ждут на левой спице. Цифры показывают порядок вязания.','Переведите петли 1 и 2 на вспомогательную спицу и оставьте за работой.','Провяжите петлю 3 с левой спицы.','Провяжите петли 1 и 2 со вспомогательной спицы. Петля 3 оказалась по другую сторону от них.']}
+    },
+    anim:{
+      cableB:{label:'Коса B',steps:['Три петли ждут на левой спице. Цифры показывают порядок вязания.','Снимите петлю 1 на вспомогательную спицу и оставьте перед работой.','Провяжите петли 2 и 3 с левой спицы.','Провяжите петлю 1 со вспомогательной спицы. Она перепрыгнула через две петли.']},
+      cableA:{label:'Коса A',steps:['Три петли ждут на левой спице. Цифры показывают порядок вязания.','Снимите петли 1 и 2 на вспомогательную спицу и оставьте за работой.','Провяжите петлю 3 с левой спицы.','Провяжите петли 1 и 2 со вспомогательной спицы. Петля 3 оказалась по другую сторону от них.']},
+      slip:{label:'Снять две петли с нитью за работой',steps:['Две петли ждут на левой спице. Нить идёт за работой.','Снимите первую петлю на правую спицу как для изнаночной. Нить остаётся за работой.','Так же снимите вторую петлю. Петли не провязывались, новых нитей не появилось.']},
+      k2tog:{label:'Две петли вместе лицевой, убавка с наклоном вправо',steps:['Две петли ждут на левой спице.','Введите правую спицу сразу в обе петли, как для лицевой.','Провяжите их вместе. Две петли превращаются в одну с наклоном вправо.']},
+      ssk:{label:'Снять, снять, провязать: убавка с наклоном влево',steps:['Две петли ждут на левой спице.','Снимите первую петлю на правую спицу как для лицевой.','Так же снимите вторую петлю. Две петли поменялись местами.','Введите левую спицу в передние стенки обеих петель и провяжите их вместе. Две петли превращаются в одну с наклоном влево.']}
+    }
+  }
+  };
+  /*STR_END*/
+
+  /* ---------- language state ---------- */
+  var lang='en';
+  (function pick(){
+    var codes=LANG_LIST.map(function(l){return l.code;});
+    var saved=null;
+    try{ saved=localStorage.getItem('cableBeanieLang'); }catch(e){}
+    if(saved && codes.indexOf(saved)>=0){ lang=saved; return; }
+    var nav=((navigator.languages&&navigator.languages[0])||navigator.language||'en').slice(0,2).toLowerCase();
+    if(codes.indexOf(nav)>=0) lang=nav;
+  })();
+  function raw(path,l){
+    var parts=path.split('.'), o=STR[l||lang];
+    for(var i=0;i<parts.length&&o!=null;i++) o=o[parts[i]];
+    return o;
+  }
+  function get(path){
+    var v=raw(path); if(v==null) v=raw(path,'en'); return v;
+  }
+  function t(path,vars){
+    var s=get(path); if(typeof s!=='string') return '';
+    if(vars) s=s.replace(/\{(\w+)\}/g,function(m,k){ return vars[k]!==undefined?vars[k]:m; });
+    return s;
+  }
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  /* ---------- patterns ---------- */
+  var PAT='hat';
+  var PATTERNS={
+    hat:{rows:14,rep:14,srcLang:'ru',lessons:['caston','knit','purl','incr','chart','slip','cableB','cableA','oval','crown']},
+    star:{rows:12,rep:5,srcLang:'de',lessons:['sCast','knit','sChart','yo','k2tog','skp','inc3','sFinish']}
+  };
+  function rowsN(){ return PATTERNS[PAT].rows; }
+  function showSrc(){ return PATTERNS[PAT].srcLang==='ru' ? lang!=='ru' : true; }
+
+  /* ---------- cable beanie data ---------- */
+  var N=14, CELL=40, X0=8, Y0=34;
+  function hatCell(r,c){
+    if(c===1||c===8) return {t:'p'};
+    var left=c>=9;
+    var cross=left?[3,5,7]:[9,11,13];
+    var slip=left?[2,4,6,14]:[8,10,12];
+    var base=left?9:2;
+    var k=c-base;
+    var block=left?'left':'right';
+    if(cross.indexOf(r)>=0){
+      if(k<3) return {t:'A',i:3-k,block:block};
+      return {t:'B',i:6-k,block:block};
+    }
+    if(slip.indexOf(r)>=0 && (k===2||k===3)) return {t:'v'};
+    return {t:'k'};
+  }
+
+  /* ---------- lace star data (rows are listed left to right as drawn) ---------- */
+  var STAR_ROWS={
+    1:'k k k k k',
+    3:'k k I I I k k',
+    5:'k skp yo k yo k2tog k',
+    6:'k k k I I I k k k',
+    7:'skp yo skp yo k yo k2tog yo k2tog',
+    8:'k k k k I I I k k k k',
+    9:'k skp yo skp yo k yo k2tog yo k2tog k',
+    10:'k k k k k I I I k k k k k',
+    11:'skp yo skp yo skp yo k yo k2tog yo k2tog yo k2tog',
+    12:'k k k k k k I I I k k k k k k'
+  };
+  var misread=false;
+  function starRow(r){
+    var s=STAR_ROWS[r], a, i;
+    if(s){ a=s.split(' '); if(misread&&r===7) a[2]='k'; return {cells:a,ghost:false}; }
+    var prev=starRow(r-1); a=[];
+    for(i=0;i<prev.cells.length;i++) a.push('k');
+    return {cells:a,ghost:true};
+  }
+  function starCell(r,c){
+    var row=starRow(r), w=row.cells.length, idx=w-c, t0=row.cells[idx];
+    if(row.ghost) return {t:'k',ghost:true};
+    if(t0==='I'){ var f=idx; while(f>0&&row.cells[f-1]==='I') f--; return {t:'I',i:idx-f,f:f,l:f+2}; }
+    return {t:t0};
+  }
+  var CIN={k:1,p:1,v:1,A:1,B:1,yo:0,k2tog:2,skp:2};
+  function starCounts(){
+    var out=[], prev=PATTERNS.star.rep;
+    for(var r=1;r<=12;r++){
+      var row=starRow(r), inn=0, ni=0;
+      row.cells.forEach(function(c){ if(c==='I') ni++; else inn+=CIN[c]; });
+      inn+=ni/3;
+      out.push({r:r,inn:inn,out:row.cells.length,expect:prev,ok:inn===prev});
+      prev=row.cells.length;
+    }
+    return out;
+  }
+  function hatCounts(){
+    var out=[]; for(var r=1;r<=14;r++) out.push({r:r,inn:14,out:14,expect:14,ok:true});
+    return out;
+  }
+  function countsFor(){ return PAT==='star'?starCounts():hatCounts(); }
+
+  function cellOf(r,c){ return PAT==='star'?starCell(r,c):hatCell(r,c); }
+  function widthOf(r){ return PAT==='star'?starRow(r).cells.length:N; }
+  function roundTokens(r){
+    var out=[], seen={}, w=widthOf(r);
+    for(var c=1;c<=w;c++){
+      var cell=cellOf(r,c);
+      if(cell.t==='A'||cell.t==='B'){
+        var id=cell.block+cell.t;
+        if(seen[id]) continue;
+        seen[id]=1; out.push({t:cell.t,n:1}); continue;
+      }
+      if(cell.t==='I'){ if(seen.I) continue; seen.I=1; out.push({t:'inc',n:1}); continue; }
+      var last=out[out.length-1];
+      if(last && last.t===cell.t) last.n++; else out.push({t:cell.t,n:1});
+    }
+    return out;
+  }
+  function chipText(tok){ return t('chip'+tok.t.toUpperCase(),{n:tok.n}); }
+  function plain(tok){ return t('tok'+tok.t.toUpperCase(),{n:tok.n}); }
+  function chipCls(t0){ return {A:'A',B:'B',v:'v',yo:'v',k2tog:'B',skp:'A'}[t0]||''; }
+  function symbolSVG(cell){
+    var t0=cell.t;
+    if(t0==='k') return '<path d="M20 7V33"/>';
+    if(t0==='p') return '<path d="M10 20H30"/>';
+    if(t0==='v') return '<path d="M12 9L20 31L28 9"/>';
+    if(t0==='yo') return '<path d="M12 10V24A8 8 0 0 0 28 24V10"/>';
+    if(t0==='k2tog') return '<path d="M10 11L20 32L30 11"/><text x="24" y="17" font-size="12" font-weight="700" fill="var(--fg)" stroke="none" font-family="Inter,system-ui,sans-serif">2</text>';
+    if(t0==='skp') return '<path d="M20 7V32M12 24L20 32L28 24"/>';
+    if(t0==='I') return cell.i===1?'<path d="M12 10V22A8 8 0 0 0 28 22V10"/>':'<path d="M20 7V33"/>';
+    var d;
+    if(t0==='B') d=(cell.i===1)?'M0 10H11L26 30H40':'M0 30H40';
+    else d=(cell.i===3)?'M0 30H14L29 10H40':'M0 30H40';
+    return '<path class="thin" d="M20 6V34"/><path d="'+d+'"/>';
+  }
+  function groupCols(r,c){
+    var cell=cellOf(r,c);
+    if(PAT==='star'){
+      if(cell.t!=='I') return [c,c];
+      var w=widthOf(r); return [w-cell.l,w-cell.f];
+    }
+    if(cell.t!=='A'&&cell.t!=='B') return [c,c];
+    var base=cell.block==='left'?9:2;
+    return cell.t==='A'?[base,base+2]:[base+3,base+5];
+  }
+
+  /* ---------- state ---------- */
+  var sel={r:1,c:1};
+  var skipped={};
+  try{
+    var saved=localStorage.getItem('cableBeanieSkipped');
+    if(saved) skipped=JSON.parse(saved)||{};
+  }catch(e){}
+  function saveSkips(){
+    try{ localStorage.setItem('cableBeanieSkipped',JSON.stringify(skipped)); }catch(e){}
+  }
+
+  /* ---------- chart drawing ---------- */
+  var svg=document.getElementById('chart');
+  function xOf(c){ return X0+(N-c)*CELL; }
+  function yOf(r){ return Y0+(N-r)*CELL; }
+  function drawHat(){
+    svg.setAttribute('viewBox','0 0 608 626');
+    var h='';
+    h+='<g><path class="bracket" d="M'+(xOf(14)+3)+' 26V22H'+(xOf(9)+CELL-3)+'V26"/><text class="axis" text-anchor="middle" x="'+((xOf(14)+xOf(9)+CELL)/2)+'" y="14">'+t('ovalLeft')+'</text></g>';
+    h+='<g><path class="bracket" d="M'+(xOf(7)+3)+' 26V22H'+(xOf(2)+CELL-3)+'V26"/><text class="axis" text-anchor="middle" x="'+((xOf(7)+xOf(2)+CELL)/2)+'" y="14">'+t('ovalRight')+'</text></g>';
+    for(var r=N;r>=1;r--){
+      for(var c=N;c>=1;c--){
+        var cell=cellOf(r,c), x=xOf(c), y=yOf(r);
+        h+='<g data-r="'+r+'" data-c="'+c+'"><rect class="cell t-'+cell.t+'" x="'+x+'" y="'+y+'" width="'+CELL+'" height="'+CELL+'"/>'+
+           '<g class="sym" transform="translate('+x+' '+y+')">'+symbolSVG(cell)+'</g></g>';
+      }
+    }
+    h+='<rect class="band" x="'+X0+'" y="'+yOf(sel.r)+'" width="'+(N*CELL)+'" height="'+CELL+'"/>';
+    var gc=groupCols(sel.r,sel.c);
+    h+='<rect class="pick" x="'+(xOf(gc[1])+1.5)+'" y="'+(yOf(sel.r)+1.5)+'" width="'+((gc[1]-gc[0]+1)*CELL-3)+'" height="'+(CELL-3)+'" rx="3"/>';
+    for(var rr=N;rr>=1;rr--){
+      h+='<text class="axis rowlabel'+(rr===sel.r?' on':'')+'" data-row="'+rr+'" x="'+(X0+N*CELL+10)+'" y="'+(yOf(rr)+CELL/2+5)+'">'+rr+'</text>';
+    }
+    for(var cc=N;cc>=1;cc--){
+      h+='<text class="axis'+(cc===sel.c?' on':'')+'" text-anchor="middle" x="'+(xOf(cc)+CELL/2)+'" y="'+(Y0+N*CELL+22)+'">'+cc+'</text>';
+    }
+    svg.innerHTML=h;
+  }
+  var SC=36, SCX=292, SY0=10;
+  function drawStar(){
+    var R=12, h='', cs=starCounts(), i;
+    svg.setAttribute('viewBox','0 0 608 '+(SY0+R*SC+10));
+    var cls={k:'k',yo:'v',k2tog:'B',skp:'A',I:'p'};
+    for(var r=R;r>=1;r--){
+      var row=starRow(r), w=row.cells.length, x0=SCX-w*SC/2, y=SY0+(R-r)*SC;
+      for(var c=w;c>=1;c--){
+        var cell=starCell(r,c), x=x0+(w-c)*SC;
+        h+='<g data-r="'+r+'" data-c="'+c+'"'+(row.ghost?' class="ghostc"':'')+'><rect class="cell t-'+cls[cell.t]+'" x="'+x+'" y="'+y+'" width="'+SC+'" height="'+SC+'"/>'+
+           '<g class="sym" transform="translate('+x+' '+y+') scale('+(SC/40)+')">'+symbolSVG(cell)+'</g></g>';
+      }
+      var f=row.ghost?-1:row.cells.indexOf('I');
+      if(f>=0){ var ax=x0+f*SC, bx=x0+(f+3)*SC; h+='<path class="arc" d="M'+(ax+4)+' '+(y+SC-9)+'Q'+((ax+bx)/2)+' '+(y+SC+4)+' '+(bx-4)+' '+(y+SC-9)+'"/>'; }
+      if(!cs[r-1].ok) h+='<rect class="badrow" x="'+x0+'" y="'+y+'" width="'+(w*SC)+'" height="'+SC+'" rx="3"/>';
+    }
+    var rw=starRow(sel.r), sw=rw.cells.length, sx0=SCX-sw*SC/2, sy=SY0+(R-sel.r)*SC;
+    h+='<rect class="band" x="'+sx0+'" y="'+sy+'" width="'+(sw*SC)+'" height="'+SC+'"/>';
+    var gc=groupCols(sel.r,sel.c);
+    h+='<rect class="pick" x="'+(sx0+(sw-gc[1])*SC+1.5)+'" y="'+(sy+1.5)+'" width="'+((gc[1]-gc[0]+1)*SC-3)+'" height="'+(SC-3)+'" rx="3"/>';
+    for(i=1;i<=R;i++){
+      var wi=starRow(i).cells.length;
+      h+='<text class="axis rowlabel'+(i===sel.r?' on':'')+(cs[i-1].ok?'':' bad')+'" data-row="'+i+'" x="'+(SCX+wi*SC/2+10)+'" y="'+(SY0+(R-i)*SC+SC/2+5)+'">'+(cs[i-1].ok?'':'⚠ ')+i+'</text>';
+    }
+    svg.innerHTML=h;
+  }
+  function drawChart(){
+    if(PAT==='star') drawStar(); else drawHat();
+    svg.setAttribute('aria-label',t(PAT==='star'?'starChartAria':'chartAria'));
+  }
+  svg.addEventListener('click',function(e){
+    var el=e.target.closest('[data-r],[data-row]');
+    if(!el) return;
+    if(el.getAttribute('data-row')){ sel.r=+el.getAttribute('data-row'); }
+    else { sel.r=+el.getAttribute('data-r'); sel.c=+el.getAttribute('data-c'); }
+    sel.c=Math.min(sel.c,widthOf(sel.r));
+    render();
+  });
+  svg.addEventListener('keydown',function(e){
+    var k=e.key, moved=true;
+    if(k==='ArrowLeft') sel.c=Math.min(widthOf(sel.r),sel.c+1);
+    else if(k==='ArrowRight') sel.c=Math.max(1,sel.c-1);
+    else if(k==='ArrowUp'){ sel.r=Math.min(rowsN(),sel.r+1); sel.c=Math.min(sel.c,widthOf(sel.r)); }
+    else if(k==='ArrowDown'){ sel.r=Math.max(1,sel.r-1); sel.c=Math.min(sel.c,widthOf(sel.r)); }
+    else moved=false;
+    if(moved){ e.preventDefault(); render(); }
+  });
+
+  function renderLegend(){
+    var items, h='';
+    if(PAT==='star'){
+      items=[
+        {cell:{t:'k'},fill:'var(--surface)',key:'lgK'},
+        {cell:{t:'yo'},fill:'var(--cell-v)',key:'lgYo'},
+        {cell:{t:'k2tog'},fill:'var(--cell-b)',key:'lgK2'},
+        {cell:{t:'skp'},fill:'var(--cell-a)',key:'lgSkp'},
+        {inc:true,key:'lgInc'},
+        {ghost:true,key:'lgGhost'}
+      ];
+    }else{
+      items=[
+        {cell:{t:'k'},fill:'var(--surface)',key:'lgK'},
+        {cell:{t:'p'},fill:'var(--cell-p)',key:'lgP'},
+        {cell:{t:'v'},fill:'var(--cell-v)',key:'lgV'},
+        {cell:{t:'B',i:1},fill:'var(--cell-b)',key:'lgB'},
+        {cell:{t:'A',i:3},fill:'var(--cell-a)',key:'lgA'}
+      ];
+    }
+    items.forEach(function(it){
+      if(it.inc){
+        h+='<span><svg viewBox="0 0 120 40" style="width:90px;height:30px" aria-hidden="true">'+[0,1,2].map(function(i){ return '<rect class="sw" x="'+(i*40+.5)+'" y="0.5" width="39" height="39" fill="var(--cell-p)"/><g class="sym" transform="translate('+(i*40)+' 0)">'+symbolSVG({t:'I',i:i})+'</g>'; }).join('')+'<path class="arc" d="M6 31Q60 44 114 31"/></svg>'+t(it.key)+'</span>';
+      }else if(it.ghost){
+        h+='<span><svg viewBox="0 0 40 40" aria-hidden="true"><g class="ghostc"><rect class="cell" x="0.5" y="0.5" width="39" height="39"/><g class="sym">'+symbolSVG({t:'k'})+'</g></g></svg>'+t(it.key)+'</span>';
+      }else{
+        h+='<span><svg viewBox="0 0 40 40" aria-hidden="true"><rect class="sw" x="0.5" y="0.5" width="39" height="39" fill="'+it.fill+'"/><g class="sym">'+symbolSVG(it.cell)+'</g></svg>'+t(it.key)+'</span>';
+      }
+    });
+    document.getElementById('legend').innerHTML=h;
+  }
+
+  /* ---------- stitch explanations ---------- */
+  var LESSON_FOR={k:'knit',p:'purl',v:'slip',A:'cableA',B:'cableB',yo:'yo',k2tog:'k2tog',skp:'skp',I:'inc3'};
+  function explainStar(r,c){
+    var cell=cellOf(r,c), where=t('where',{c:c,r:r}), title, src, body, a=1, b=1;
+    if(cell.t==='yo'){ title=t('yoTitle'); src='Umschlag'; body=t('yoBody'); a=0; }
+    else if(cell.t==='k2tog'){ title=t('k2Title'); src='2 M re zusstr'; body=t('k2Body'); a=2; }
+    else if(cell.t==='skp'){ title=t('skTitle'); src='2 M überzogen zusstr'; body=t('skBody'); a=2; }
+    else if(cell.t==='I'){ title=t('inTitle',{i:3-cell.i}); src='aus 1 M 3 M herausstr: 1 M re, 1 U, 1 M re'; body=t('inBody'); a=1; b=3; }
+    else { title=t('kTitle'); src='1 M re'; body=t('kBody')+(cell.ghost?t('ghostBody'):''); }
+    body+=' '+t('useLine',{a:a,b:b});
+    return {where:where,title:title,src:src,body:body,lesson:LESSON_FOR[cell.t]};
+  }
+  function explain(r,c){
+    if(PAT==='star') return explainStar(r,c);
+    var cell=cellOf(r,c);
+    var inBlock=(c>=9)?'left':((c>=2&&c<=7)?'right':null);
+    var block=inBlock?t(inBlock==='left'?'blockLeft':'blockRight'):'';
+    var title,srcTerm,body,gc=groupCols(r,c);
+    if(cell.t==='p'){
+      title=t('pTitle'); srcTerm='изнаночная петля'; body=t('pBody');
+    }else if(cell.t==='k'){
+      title=t('kTitle'); srcTerm='лицевая петля'; body=t('kBody');
+      if(inBlock){
+        var rs=(inBlock==='left')?[2,3,4,5,6,7,14]:[8,9,10,11,12,13];
+        body+=(rs.indexOf(r)<0)?t('kIdle',{block:block}):t('kPart',{block:block});
+      }
+    }else if(cell.t==='v'){
+      title=t('vTitle'); srcTerm='снятая петля, нить за работой'; body=t('vBody',{block:block});
+    }else if(cell.t==='A'){
+      title=t('aTitle',{i:4-cell.i}); srcTerm='2 петли снять на вспом. спицу и оставить за работой';
+      body=t('aBody',{c1:gc[0],c2:gc[1]});
+    }else{
+      title=t('bTitle',{i:4-cell.i}); srcTerm='1 петлю снять на вспом. спицу и оставить перед работой';
+      body=t('bBody',{c1:gc[0],c2:gc[1]});
+    }
+    return {where:t('where',{c:c,r:r}),title:title,src:srcTerm,body:body,lesson:LESSON_FOR[cell.t]};
+  }
+
+  /* ---------- round + stitch + count cards ---------- */
+  function renderRound(){
+    var r=sel.r, toks=roundTokens(r), cs=countsFor()[r-1], star=(PAT==='star');
+    var chips=toks.map(function(tk){ return '<span class="chip '+chipCls(tk.t)+'">'+chipText(tk)+'</span>'; }).join('');
+    var sentence=cap(toks.map(plain).join(t('sep')))+t('stop');
+    var note='';
+    if(!star){ if(r===14) note=t('noteR14'); else if(r===1) note=t('noteR1'); else if(r===2) note=t('noteR2'); }
+    else { if(starRow(r).ghost) note=t('noteGhost'); else if(r===1) note=t('noteS1'); else if(r===12) note=t('noteS12'); }
+    var cnt='<p class="hint'+(cs.ok?'':' chk-bad')+'">'+(cs.ok?'✓ ':'⚠ ')+t('cntLine',{a:cs.inn,b:cs.out})+'</p>';
+    var h='<div class="stack" style="gap:4px"><h2>'+t(star?'roundHS':'roundH',{r:r})+'</h2><p class="muted small">'+t(star?'starRoundSub':'roundSub')+'</p></div>'+
+      '<div class="chips" aria-label="'+t('stitchesAria')+'">'+chips+'</div>'+
+      '<p>'+sentence+'</p>'+
+      (note?'<p class="hint">'+note+'</p>':'')+cnt+
+      '<div class="row-actions"><button type="button" id="prevR"'+(r===1?' disabled':'')+'>'+t('prevR')+'</button><button type="button" class="primary" id="nextR"'+(r===rowsN()?' disabled':'')+'>'+t('nextR')+'</button></div>';
+    document.getElementById('roundCard').innerHTML=h;
+    document.getElementById('prevR').onclick=function(){ sel.r=Math.max(1,sel.r-1); sel.c=Math.min(sel.c,widthOf(sel.r)); render(); };
+    document.getElementById('nextR').onclick=function(){ sel.r=Math.min(rowsN(),sel.r+1); sel.c=Math.min(sel.c,widthOf(sel.r)); render(); };
+  }
+  function renderStitch(){
+    var ex=explain(sel.r,sel.c);
+    var title=t('lessons.'+ex.lesson+'.title');
+    var h='<div class="stack" style="gap:4px"><p class="muted small">'+ex.where+'</p><h2>'+ex.title+'</h2>'+(showSrc()?'<p class="ru">'+ex.src+'</p>':'')+'</div>'+
+      '<p>'+ex.body+'</p>'+
+      '<div class="row-actions"><button type="button" id="openL">'+t('openLesson',{title:title})+'</button></div>';
+    document.getElementById('stitchCard').innerHTML=h;
+    document.getElementById('openL').onclick=function(){ openLesson(ex.lesson); };
+  }
+  function renderCheck(){
+    var cs=countsFor(), bad=cs.filter(function(c){ return !c.ok; });
+    var h='<h2>'+t('chkH')+'</h2>';
+    if(!bad.length) h+='<p>✓ '+t('chkOk',{n:cs.length})+'</p>';
+    else h+='<p class="chk-bad">⚠ '+t('chkBad',{r:bad[0].r,a:bad[0].inn,b:bad[0].expect})+'</p>';
+    if(PAT==='star'){
+      h+='<details><summary>'+t('chkShow')+'</summary><div class="scroll-x"><table><thead><tr><th>'+t('thRound')+'</th><th>'+t('chkUses')+'</th><th>'+t('chkBelow')+'</th><th></th></tr></thead><tbody>';
+      cs.forEach(function(c){ h+='<tr><td class="num">'+c.r+'</td><td class="num">'+c.inn+'</td><td class="num">'+c.expect+'</td><td'+(c.ok?'':' class="chk-bad"')+'>'+(c.ok?'✓':'⚠')+'</td></tr>'; });
+      h+='</tbody></table></div></details>';
+      h+='<div class="row-actions"><button type="button" id="misreadBtn">'+t(misread?'chkRestore':'chkSim')+'</button></div>';
+    }else h+='<p class="hint">'+t('chkHat')+'</p>';
+    var el=document.getElementById('checkCard'); el.innerHTML=h;
+    var mb=document.getElementById('misreadBtn');
+    if(mb) mb.onclick=function(){ misread=!misread; if(misread){ sel.r=7; sel.c=Math.min(sel.c,widthOf(7)); } render(); renderCheck(); };
+  }
+
+  /* ---------- animated stitch diagrams ---------- */
+  var REDUCED=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var LY=40, CY=95, RY=150;
+  function px(slot){ return 300-slot*52; }
+  function mkState(o,cn){
+    var st={cn:cn||0};
+    ['1','2','3','r'].forEach(function(k){
+      var v=o[k]||[0,LY,0.5,0];
+      st[k+'x']=px(v[0]); st[k+'y']=v[1]; st[k+'z']=v[2]; st[k+'a']=(v[3]===undefined?1:v[3]);
+    });
+    return st;
+  }
+  /* geometry only: captions come from the translations (anim.<id>.steps[i]) */
+  var ANIMS={
+    cableB:{cn:'front',cnSlots:1,steps:[
+      mkState({'1':[0,LY,0.5],'2':[1,LY,0.5],'3':[2,LY,0.5]},0),
+      mkState({'1':[0,CY,1],'2':[1,LY,0.5],'3':[2,LY,0.5]},1),
+      mkState({'1':[0,CY,1],'2':[0,RY,0.5],'3':[1,RY,0.5]},1),
+      mkState({'1':[2,RY,0.5],'2':[0,RY,0.5],'3':[1,RY,0.5]},0)
+    ]},
+    cableA:{cn:'back',cnSlots:2,steps:[
+      mkState({'1':[0,LY,0.5],'2':[1,LY,0.5],'3':[2,LY,0.5]},0),
+      mkState({'1':[0,CY,0],'2':[1,CY,0],'3':[2,LY,0.5]},1),
+      mkState({'1':[0,CY,0],'2':[1,CY,0],'3':[0,RY,0.5]},1),
+      mkState({'1':[1,RY,0.5],'2':[2,RY,0.5],'3':[0,RY,0.5]},0)
+    ]},
+    slip:{yarn:true,steps:[
+      mkState({'1':[0,LY,0.5],'2':[1,LY,0.5]},0),
+      mkState({'1':[0,RY,0.5],'2':[1,LY,0.5]},0),
+      mkState({'1':[0,RY,0.5],'2':[1,RY,0.5]},0)
+    ]},
+    k2tog:{steps:[
+      mkState({'1':[0,LY,0.5],'2':[1,LY,0.5]},0),
+      mkState({'1':[0.35,LY,0.7],'2':[0.65,LY,0.5]},0),
+      mkState({'1':[0.5,RY,0.5,0],'2':[0.5,RY,0.5,0],'r':[0.5,RY,0.6,1]},0)
+    ]},
+    ssk:{steps:[
+      mkState({'1':[0,LY,0.5],'2':[1,LY,0.5]},0),
+      mkState({'1':[1,RY,0.5],'2':[1,LY,0.5]},0),
+      mkState({'1':[1,RY,0.5],'2':[0,RY,0.5]},0),
+      mkState({'1':[0.5,RY,0.5,0],'2':[0.5,RY,0.5,0],'r':[0.5,RY,0.6,1]},0)
+    ]}
+  };
+  function renderScene(st,def){
+    var s='';
+    s+='<rect class="nd" x="20" y="'+(LY-5)+'" width="326" height="10" rx="5"/>';
+    s+='<rect class="nd" x="20" y="'+(RY-5)+'" width="326" height="10" rx="5"/>';
+    s+='<text class="albl" x="24" y="'+(LY-12)+'">'+t('lblLeft')+'</text>';
+    s+='<text class="albl" x="24" y="'+(RY-12)+'">'+t('lblRight')+'</text>';
+    if(def.yarn){
+      s+='<path class="yarn" d="M352 8C300 22 200 22 120 16"/>';
+      s+='<text class="albl" x="24" y="'+(CY+4)+'">'+t('lblYarn')+'</text>';
+    }
+    if(def.cn){
+      var w=px(0)-px(def.cnSlots-1)+52;
+      s+='<rect class="cn '+(def.cn==='back'?'back':'')+'" opacity="'+st.cn.toFixed(3)+'" x="'+(px(def.cnSlots-1)-26)+'" y="'+(CY-17)+'" width="'+w+'" height="34" rx="17"/>';
+      s+='<text class="albl" opacity="'+st.cn.toFixed(3)+'" x="24" y="'+(CY+4)+'">'+t(def.cn==='back'?'lblCnBack':'lblCnFront')+'</text>';
+    }
+    var list=[];
+    ['1','2','3','r'].forEach(function(k){ list.push({k:k,x:st[k+'x'],y:st[k+'y'],z:st[k+'z'],a:st[k+'a']}); });
+    list.sort(function(p,q){ return p.z-q.z; });
+    list.forEach(function(o){
+      if(o.a<0.01) return;
+      var rad=9+5*o.z, isR=(o.k==='r');
+      var fill=isR?'var(--accent)':'var(--s'+o.k+')', txt=isR?'var(--on-accent)':'var(--on-s)';
+      var stroke=o.z>=0.9?'var(--fg)':'var(--bg)';
+      s+='<g opacity="'+(o.a*(0.55+0.45*o.z)).toFixed(3)+'"><circle cx="'+o.x.toFixed(1)+'" cy="'+o.y.toFixed(1)+'" r="'+rad.toFixed(1)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2"/>'+
+         '<text x="'+o.x.toFixed(1)+'" y="'+(o.y+4.5).toFixed(1)+'" text-anchor="middle" font-size="13" font-weight="700" fill="'+txt+'" font-family="Inter,system-ui,sans-serif">'+(isR?'1':o.k)+'</text></g>';
+    });
+    return s;
+  }
+  function lerpState(a,b,tt){ var o={}; for(var k in b){ o[k]=a[k]+(b[k]-a[k])*tt; } return o; }
+  function ease(x){ return x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2; }
+  /* ---------- needle-and-yarn animations ---------- */
+  var NLY=70, NRA=14*Math.PI/180, NRC=Math.cos(NRA), NRS=Math.sin(NRA);
+  var REST=[322,136], ACT=[287,82], ACTP=[287,58];
+  var COLS={old:'var(--y0)',work:'var(--s3)',neu:'var(--accent)',c1:'var(--s1)',c2:'var(--s2)',c3:'var(--s3)'};
+  function rg(pos,col,o){
+    var r={col:col}, k;
+    for(k in pos) r[k]=pos[k];
+    if(o) for(k in o) r[k]=o[k];
+    return r;
+  }
+  function lb(pos,col,lab,o){ var o2={lab:lab}, k; if(o) for(k in o) o2[k]=o[k]; return rg(pos,col,o2); }
+  function resolveN(sp){
+    var lt=sp.lt||316, rt=sp.rt||REST, cn=sp.cn||null;
+    var rings=sp.rings.map(function(r){
+      var x,y,rot=0,th='';
+      if(r.on==='L'){ x=lt-26-r.i*28; y=NLY; th='L'; }
+      else if(r.on==='R'){ x=rt[0]+r.s*NRC; y=rt[1]+r.s*NRS; rot=14; th='R'; }
+      else if(r.on==='C'){ x=cn.x1+r.s; y=cn.y; th='C'; }
+      else { x=r.x; y=r.y; }
+      if(r.th!==undefined) th=r.th;
+      var small=r.size==='s';
+      return {x:x,y:y,rot:rot,a:(r.a===undefined?1:r.a),col:COLS[r.col]||r.col,th:th,lab:r.lab||'',rx:small?7:10,ry:small?15:22};
+    });
+    var yarn=null;
+    if(sp.yarn){
+      var e;
+      if(typeof sp.yarn.end==='number'){ var q=rings[sp.yarn.end]; e=[q.x,q.y-q.ry*0.6]; } else e=sp.yarn.end;
+      yarn=[[436,8],[410,26],[380,42],[(380+e[0])/2,(42+e[1])/2-10],e];
+    }
+    return {lt:lt,rt:rt,cn:cn?{x1:cn.x1,y:cn.y,a:cn.a,z:cn.z}:null,rings:rings,yarn:yarn,yz:sp.yarn?sp.yarn.z:'back',tag:sp.tag||''};
+  }
+  var NEEDLES={};
+  (function(){
+    function knitSteps(pur){
+      var yz=pur?'front':'back', tag=pur?'tagFront':'tagBack', tip=pur?ACTP:ACT;
+      var W=function(o){ return rg({on:'L',i:0},'work',o); };
+      var T=function(){ return rg({on:'L',i:1},'old'); };
+      var N=function(a){ return rg({on:'R',s:5},'neu',{a:a,size:'s'}); };
+      var P=function(){ return rg({on:'R',s:70},'old'); };
+      var y3={end:3,z:yz}, y2={end:2,z:yz};
+      return [
+        {rt:REST,rings:[W(),T(),N(0),P()],yarn:y3,tag:tag},
+        {rt:tip,rings:[W({th:'LR'}),T(),N(0),P()],yarn:y3,tag:tag},
+        {rt:tip,rings:[W({th:'LR'}),T(),N(1),P()],yarn:y2,tag:tag},
+        {rt:[306,94],rings:[W(),T(),N(1),P()],yarn:y2,tag:tag},
+        {rt:[318,110],rings:[rg({x:328,y:146},'work',{th:''}),rg({on:'L',i:0},'old'),N(1),P()],yarn:y2,tag:tag}
+      ].map(resolveN);
+    }
+    NEEDLES.knit={steps:knitSteps(false)};
+    NEEDLES.purl={steps:knitSteps(true)};
+
+    var Ps=function(){ return rg({on:'R',s:100},'old'); };
+    var yb=function(i){ return {end:i,z:'back'}; };
+    NEEDLES.slip={steps:[
+      {rt:REST,rings:[lb({on:'L',i:0},'c1','1'),lb({on:'L',i:1},'c2','2'),Ps()],yarn:yb(2),tag:'tagBack'},
+      {rt:ACTP,rings:[lb({on:'L',i:0},'c1','1',{th:'LR'}),lb({on:'L',i:1},'c2','2'),Ps()],yarn:yb(2),tag:'tagBack'},
+      {rt:[318,112],rings:[lb({on:'R',s:14},'c1','1'),lb({on:'L',i:0},'c2','2'),Ps()],yarn:yb(2),tag:'tagBack'},
+      {rt:[318,112],rings:[lb({on:'R',s:40},'c1','1'),lb({on:'R',s:14},'c2','2'),Ps()],yarn:yb(2),tag:'tagBack'}
+    ].map(resolveN)};
+
+    var P70=function(){ return rg({on:'R',s:70},'old'); };
+    var Ns=function(a){ return rg({on:'R',s:5},'neu',{a:a,size:'s'}); };
+    NEEDLES.k2tog={steps:[
+      {rt:REST,rings:[lb({on:'L',i:0},'c1','1'),lb({on:'L',i:1},'c2','2'),Ns(0),P70()],yarn:yb(3),tag:'tagBack'},
+      {rt:[259,80],rings:[lb({on:'L',i:0},'c1','1',{th:'LR'}),lb({on:'L',i:1},'c2','2',{th:'LR'}),Ns(0),P70()],yarn:yb(3),tag:'tagBack'},
+      {rt:[259,80],rings:[lb({on:'L',i:0},'c1','1',{th:'LR'}),lb({on:'L',i:1},'c2','2',{th:'LR'}),Ns(1),P70()],yarn:yb(2),tag:'tagBack'},
+      {rt:[300,96],rings:[lb({on:'L',i:0},'c1','1'),lb({on:'L',i:1},'c2','2'),Ns(1),P70()],yarn:yb(2),tag:'tagBack'},
+      {rt:[318,110],rings:[lb({x:326,y:146},'c1','1',{th:''}),lb({x:352,y:152},'c2','2',{th:''}),Ns(1),P70()],yarn:yb(2),tag:'tagBack'}
+    ].map(resolveN)};
+
+    NEEDLES.ssk={steps:[
+      {lt:316,rt:REST,rings:[lb({on:'L',i:0},'c1','1'),lb({on:'L',i:1},'c2','2'),Ns(0),P70()],yarn:yb(3),tag:'tagBack'},
+      {lt:316,rt:[318,112],rings:[lb({on:'R',s:14},'c1','1'),lb({on:'L',i:0},'c2','2'),Ns(0),P70()],yarn:yb(3),tag:'tagBack'},
+      {lt:316,rt:[318,112],rings:[lb({on:'R',s:40},'c1','1'),lb({on:'R',s:14},'c2','2'),Ns(0),P70()],yarn:yb(3),tag:'tagBack'},
+      {lt:348,rt:[350,132],rings:[lb({on:'L',i:1},'c1','1'),lb({on:'L',i:0},'c2','2'),Ns(0),P70()],yarn:yb(3),tag:'tagBack'},
+      {lt:348,rt:[291,78],rings:[lb({on:'L',i:1},'c1','1',{th:'LR'}),lb({on:'L',i:0},'c2','2',{th:'LR'}),Ns(0),P70()],yarn:yb(3),tag:'tagBack'},
+      {lt:348,rt:[291,78],rings:[lb({on:'L',i:1},'c1','1',{th:'LR'}),lb({on:'L',i:0},'c2','2',{th:'LR'}),Ns(1),P70()],yarn:yb(2),tag:'tagBack'},
+      {lt:316,rt:[322,110],rings:[lb({x:332,y:148},'c1','1',{th:''}),lb({x:358,y:154},'c2','2',{th:''}),Ns(1),P70()],yarn:yb(2),tag:'tagBack'}
+    ].map(resolveN)};
+
+    function cableSteps(back){
+      var z=back?'back':'front', cy=back?110:116, cs=function(a){ return {x1:256,y:cy,a:a,z:z}; };
+      var r1=function(pos){ return lb(pos,'c1','1'); }, r2=function(pos){ return lb(pos,'c2','2'); }, r3=function(pos){ return lb(pos,'c3','3'); };
+      var hold=back?'lblCnBack':'lblCnFront';
+      var steps=[
+        {cn:cs(0),rings:[r1({on:'L',i:0}),r2({on:'L',i:1}),r3({on:'L',i:2})],tag:''}
+      ];
+      if(back){
+        steps.push({cn:cs(1),rings:[r1({on:'C',s:30}),r2({on:'C',s:58}),r3({on:'L',i:0})],tag:hold});
+        steps.push({cn:cs(1),rings:[r1({on:'C',s:30}),r2({on:'C',s:58}),r3({on:'R',s:14})],tag:hold});
+        steps.push({cn:cs(0),rings:[r1({on:'R',s:40}),r2({on:'R',s:14}),r3({on:'R',s:66})],tag:''});
+      }else{
+        steps.push({cn:cs(1),rings:[r1({on:'C',s:30}),r2({on:'L',i:0}),r3({on:'L',i:1})],tag:hold});
+        steps.push({cn:cs(1),rings:[r1({on:'C',s:30}),r2({on:'R',s:40}),r3({on:'R',s:14})],tag:hold});
+        steps.push({cn:cs(0),rings:[r1({on:'R',s:14}),r2({on:'R',s:66}),r3({on:'R',s:40})],tag:''});
+      }
+      return steps.map(function(st){ st.rt=REST; st.lt=316; return resolveN(st); });
+    }
+    NEEDLES.cableB={steps:cableSteps(false)};
+    NEEDLES.cableA={steps:cableSteps(true)};
+
+    var Pn=function(s){ return rg({on:'R',s:s},'old'); };
+    var Nw=function(s,a){ return rg({on:'R',s:s},'neu',{a:a,size:'s'}); };
+    var yf=function(e,z){ return {end:e,z:z}; };
+    var Wk=function(o){ return rg({on:'L',i:0},'work',o); };
+    NEEDLES.yo={steps:[
+      {rt:REST,rings:[Wk(),Nw(5,0),Nw(5,0),Pn(70)],yarn:yf(3,'back'),tag:'tagBack'},
+      {rt:REST,rings:[Wk(),Nw(5,0),Nw(5,0),Pn(70)],yarn:yf([318,128],'front'),tag:'tagFront'},
+      {rt:REST,rings:[Wk(),Nw(5,1),Nw(5,0),Pn(70)],yarn:yf(1,'front'),tag:'tagFront'},
+      {rt:[318,110],rings:[rg({x:328,y:146},'work',{th:''}),Nw(32,1),Nw(5,1),Pn(70)],yarn:yf(2,'back'),tag:'tagBack'}
+    ].map(resolveN)};
+
+    var A1=function(pos,o){ return lb(pos,'c1','1',o); }, B1=function(pos,o){ return lb(pos,'c2','2',o); };
+    NEEDLES.skp={steps:[
+      {rt:REST,rings:[A1({on:'L',i:0}),B1({on:'L',i:1}),Nw(5,0),Pn(90)],yarn:yf(3,'back'),tag:'tagBack'},
+      {rt:[318,112],rings:[A1({on:'R',s:14}),B1({on:'L',i:0}),Nw(5,0),Pn(90)],yarn:yf(3,'back'),tag:'tagBack'},
+      {rt:ACT,rings:[A1({on:'R',s:26}),B1({on:'L',i:0},{th:'LR'}),Nw(5,0),Pn(90)],yarn:yf(3,'back'),tag:'tagBack'},
+      {rt:ACT,rings:[A1({on:'R',s:26}),B1({on:'L',i:0},{th:'LR'}),Nw(5,1),Pn(90)],yarn:yf(2,'back'),tag:'tagBack'},
+      {rt:[318,110],rings:[A1({on:'R',s:30}),B1({x:330,y:148},{th:''}),Nw(5,1),Pn(90)],yarn:yf(2,'back'),tag:'tagBack'},
+      {rt:[318,110],rings:[A1({x:294,y:144,th:''}),B1({x:330,y:148},{th:''}),Nw(5,1),Pn(90)],yarn:yf(2,'back'),tag:'tagBack'}
+    ].map(resolveN)};
+
+    NEEDLES.inc3={steps:[
+      {rt:REST,rings:[Wk(),Nw(5,0),Nw(5,0),Nw(5,0),Pn(100)],yarn:yf(4,'back'),tag:'tagBack'},
+      {rt:[306,94],rings:[Wk(),Nw(5,1),Nw(5,0),Nw(5,0),Pn(100)],yarn:yf(1,'back'),tag:'tagBack'},
+      {rt:[306,94],rings:[Wk(),Nw(30,1),Nw(5,1),Nw(5,0),Pn(100)],yarn:yf(2,'front'),tag:'tagFront'},
+      {rt:ACT,rings:[Wk({th:'LR'}),Nw(54,1),Nw(28,1),Nw(5,1),Pn(100)],yarn:yf(3,'back'),tag:'tagBack'},
+      {rt:[318,110],rings:[rg({x:330,y:148},'work',{th:''}),Nw(54,1),Nw(28,1),Nw(5,1),Pn(100)],yarn:yf(3,'back'),tag:'tagBack'}
+    ].map(resolveN)};
+  })();
+
+  function lerpN(a,b,t){ return a+(b-a)*t; }
+  function lerpNeedle(a,b,t){
+    var h=t<0.5, o={lt:lerpN(a.lt,b.lt,t),rt:[lerpN(a.rt[0],b.rt[0],t),lerpN(a.rt[1],b.rt[1],t)],tag:h?a.tag:b.tag,yz:h?a.yz:b.yz};
+    o.cn=(a.cn&&b.cn)?{x1:lerpN(a.cn.x1,b.cn.x1,t),y:lerpN(a.cn.y,b.cn.y,t),a:lerpN(a.cn.a,b.cn.a,t),z:h?a.cn.z:b.cn.z}:(b.cn||a.cn);
+    o.rings=a.rings.map(function(ra,i){
+      var rb=b.rings[i];
+      return {x:lerpN(ra.x,rb.x,t),y:lerpN(ra.y,rb.y,t),rot:lerpN(ra.rot,rb.rot,t),a:lerpN(ra.a,rb.a,t),rx:lerpN(ra.rx,rb.rx,t),ry:lerpN(ra.ry,rb.ry,t),
+        col:h?ra.col:rb.col,th:h?ra.th:rb.th,lab:h?ra.lab:rb.lab};
+    });
+    o.yarn=(a.yarn&&b.yarn)?a.yarn.map(function(pa,i){ return [lerpN(pa[0],b.yarn[i][0],t),lerpN(pa[1],b.yarn[i][1],t)]; }):(b.yarn||a.yarn);
+    return o;
+  }
+  function ringXf(r){ return 'translate('+r.x.toFixed(1)+' '+r.y.toFixed(1)+') rotate('+r.rot.toFixed(1)+')'; }
+  function ringHalf(r,side){
+    var d=(side==='back')?('M0 '+(-r.ry).toFixed(1)+'A'+r.rx.toFixed(1)+' '+r.ry.toFixed(1)+' 0 0 1 0 '+r.ry.toFixed(1)):('M0 '+r.ry.toFixed(1)+'A'+r.rx.toFixed(1)+' '+r.ry.toFixed(1)+' 0 0 1 0 '+(-r.ry).toFixed(1));
+    return '<path d="'+d+'" transform="'+ringXf(r)+'" fill="none" stroke="'+r.col+'" stroke-width="4.5" stroke-linecap="round" opacity="'+(r.a*(side==='back'?0.8:1)).toFixed(3)+'"/>';
+  }
+  function ringFull(r){
+    return '<ellipse rx="'+r.rx.toFixed(1)+'" ry="'+r.ry.toFixed(1)+'" transform="'+ringXf(r)+'" fill="none" stroke="'+r.col+'" stroke-width="4.5" opacity="'+r.a.toFixed(3)+'"/>';
+  }
+  function yarnPath(pts){
+    var d='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1), i, m;
+    for(i=1;i<pts.length-1;i++){
+      m=[(pts[i][0]+pts[i+1][0])/2,(pts[i][1]+pts[i+1][1])/2];
+      d+=' Q'+pts[i][0].toFixed(1)+' '+pts[i][1].toFixed(1)+' '+m[0].toFixed(1)+' '+m[1].toFixed(1);
+    }
+    var l=pts[pts.length-1];
+    return '<path d="'+d+' L'+l[0].toFixed(1)+' '+l[1].toFixed(1)+'" fill="none" stroke="var(--yarn)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+  function cnLine(cn){
+    return '<g opacity="'+(cn.a*(cn.z==='back'?0.6:1)).toFixed(3)+'"><line x1="'+cn.x1.toFixed(1)+'" y1="'+cn.y.toFixed(1)+'" x2="'+(cn.x1+80).toFixed(1)+'" y2="'+cn.y.toFixed(1)+'" stroke="var(--nc)" stroke-width="7" stroke-linecap="round"/></g>';
+  }
+  function renderNeedle(st){
+    var s='', i, r;
+    if(st.yarn&&st.yz==='back') s+=yarnPath(st.yarn);
+    if(st.cn&&st.cn.z==='back'&&st.cn.a>0.01) s+=cnLine(st.cn);
+    for(i=0;i<st.rings.length;i++){ r=st.rings[i]; if(r.a>0.01&&r.th) s+=ringHalf(r,'back'); }
+    s+='<line x1="6" y1="'+NLY+'" x2="'+st.lt.toFixed(1)+'" y2="'+NLY+'" stroke="var(--nl)" stroke-width="9" stroke-linecap="round"/>';
+    s+='<line x1="8" y1="'+(NLY-2)+'" x2="'+(st.lt-4).toFixed(1)+'" y2="'+(NLY-2)+'" stroke="var(--nh)" stroke-width="2" stroke-linecap="round" opacity=".7"/>';
+    var tx=st.rt[0], ty=st.rt[1];
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+ty.toFixed(1)+'" x2="'+(tx+460*NRC).toFixed(1)+'" y2="'+(ty+460*NRS).toFixed(1)+'" stroke="var(--nr)" stroke-width="9" stroke-linecap="round"/>';
+    s+='<line x1="'+tx.toFixed(1)+'" y1="'+(ty-2).toFixed(1)+'" x2="'+(tx+460*NRC).toFixed(1)+'" y2="'+(ty-2+460*NRS).toFixed(1)+'" stroke="var(--nh)" stroke-width="2" stroke-linecap="round" opacity=".6"/>';
+    if(st.cn&&st.cn.z==='front'&&st.cn.a>0.01) s+=cnLine(st.cn);
+    for(i=0;i<st.rings.length;i++){ r=st.rings[i]; if(r.a>0.01) s+=r.th?ringHalf(r,'front'):ringFull(r); }
+    if(st.yarn&&st.yz==='front') s+=yarnPath(st.yarn);
+    for(i=0;i<st.rings.length;i++){
+      r=st.rings[i];
+      if(r.lab&&r.a>0.5) s+='<text x="'+r.x.toFixed(1)+'" y="'+(r.y-r.ry-7).toFixed(1)+'" text-anchor="middle" font-size="13" font-weight="700" fill="var(--fg)" font-family="Inter,system-ui,sans-serif">'+r.lab+'</text>';
+    }
+    s+='<text class="albl" x="8" y="48">'+t('lblLeft')+'</text>';
+    s+='<text class="albl" x="432" y="232" text-anchor="end">'+t('lblRight')+'</text>';
+    if(st.tag) s+='<text class="albl" x="8" y="232">'+t(st.tag)+'</text>';
+    return s;
+  }
+
+  var KIND={
+    diagram:{defs:ANIMS,key:'anim',lerp:lerpState,render:renderScene,vb:'0 0 360 180'},
+    needles:{defs:NEEDLES,key:'needle',lerp:lerpNeedle,render:renderNeedle,vb:'0 0 440 240'}
+  };
+  var animView='needles';
+  function animBlock(id,kind,hidden){
+    var K=KIND[kind];
+    return '<div class="anim" data-anim="'+id+'" data-kind="'+kind+'"'+(hidden?' hidden':'')+'><svg viewBox="'+K.vb+'" role="img" aria-label="'+t('animAria',{label:t(K.key+'.'+id+'.label')})+'"></svg>'+
+      '<div class="anim-bar"><button type="button" data-act="play">'+t('pause')+'</button><button type="button" data-act="prev">'+t('back')+'</button><button type="button" data-act="next">'+t('next')+'</button><span class="dots"></span></div>'+
+      '<p class="cap"></p></div>';
+  }
+  function animHTML(id){
+    var hasN=!!NEEDLES[id], hasD=!!ANIMS[id], h='<div class="animset">';
+    if(hasN&&hasD){
+      h+='<div class="seg" role="group" aria-label="'+t('viewLabel')+'"><button type="button" data-view="needles" aria-pressed="'+(animView==='needles')+'">'+t('viewNeedles')+'</button><button type="button" data-view="diagram" aria-pressed="'+(animView==='diagram')+'">'+t('viewDiagram')+'</button></div>';
+    }
+    if(hasN) h+=animBlock(id,'needles',hasD&&animView!=='needles');
+    if(hasD) h+=animBlock(id,'diagram',hasN&&animView!=='diagram');
+    return h+'</div>';
+  }
+  function applyView(){
+    var sets=document.querySelectorAll('#lessons .animset'), i, j;
+    for(i=0;i<sets.length;i++){
+      var seg=sets[i].querySelector('.seg'); if(!seg) continue;
+      var bs=seg.querySelectorAll('button');
+      for(j=0;j<bs.length;j++) bs[j].setAttribute('aria-pressed',String(bs[j].getAttribute('data-view')===animView));
+      var an=sets[i].querySelectorAll('.anim');
+      for(j=0;j<an.length;j++) an[j].hidden=(an[j].getAttribute('data-kind')!==animView);
+    }
+  }
+  var mounted=[];
+  function unmountAll(){ mounted.forEach(function(m){ m(); }); mounted=[]; }
+  function mountAnim(el){
+    var id=el.getAttribute('data-anim'), kind=el.getAttribute('data-kind')||'diagram', K=KIND[kind], def=K.defs[id]; if(!def) return;
+    var caps=get(K.key+'.'+id+'.steps');
+    var stage=el.querySelector('svg'), capEl=el.querySelector('.cap'), dots=el.querySelector('.dots'), playBtn=el.querySelector('[data-act="play"]');
+    var n=def.steps.length, idx=0, cur=def.steps[0], playing=false, userStopped=false, raf=0, tmr=0, obs=null;
+    var dh=''; for(var i=0;i<n;i++) dh+='<button type="button" data-i="'+i+'" aria-label="'+t('goStep',{n:i+1})+'">'+(i+1)+'</button>';
+    dots.innerHTML=dh;
+    function draw(){ stage.innerHTML=K.render(cur,def); }
+    function label(){
+      capEl.textContent=(idx+1)+'. '+caps[idx];
+      var bs=dots.querySelectorAll('button');
+      for(var j=0;j<bs.length;j++){ if(j===idx) bs[j].setAttribute('aria-current','step'); else bs[j].removeAttribute('aria-current'); }
+    }
+    function cancel(){ cancelAnimationFrame(raf); clearTimeout(tmr); }
+    function go(i,animate,done){
+      cancel(); idx=i; label();
+      var target=def.steps[i];
+      if(!animate||REDUCED){ cur=target; draw(); if(done) done(); return; }
+      var from=cur, t0=null;
+      function frame(ts){
+        if(t0===null) t0=ts;
+        var p=Math.min(1,(ts-t0)/1100);
+        cur=K.lerp(from,target,ease(p)); draw();
+        if(p<1) raf=requestAnimationFrame(frame); else { cur=target; if(done) done(); }
+      }
+      raf=requestAnimationFrame(frame);
+    }
+    function loop(){
+      if(!playing) return;
+      tmr=setTimeout(function(){
+        if(!playing) return;
+        var nx=(idx+1)%n;
+        go(nx,nx!==0,loop);
+      },1600);
+    }
+    function play(){ playing=true; playBtn.textContent=t('pause'); loop(); }
+    function pause(){ playing=false; clearTimeout(tmr); playBtn.textContent=t('play'); }
+    function manual(){ userStopped=true; pause(); }
+    playBtn.onclick=function(){ if(playing){ manual(); } else { userStopped=false; play(); } };
+    el.querySelector('[data-act="prev"]').onclick=function(){ manual(); go(Math.max(0,idx-1),true); };
+    el.querySelector('[data-act="next"]').onclick=function(){ manual(); var nx=(idx+1)%n; go(nx,nx!==0); };
+    dots.onclick=function(e){ var b=e.target.closest('button'); if(!b) return; manual(); go(+b.getAttribute('data-i'),true); };
+    draw(); label(); playBtn.textContent=t('play');
+    if(!REDUCED && 'IntersectionObserver' in window){
+      obs=new IntersectionObserver(function(es){
+        var vis=es[0].isIntersecting;
+        if(vis && !userStopped && !playing) play();
+        else if(!vis && playing) pause();
+      },{threshold:0.4});
+      obs.observe(el);
+    }
+    mounted.push(function(){ cancel(); playing=false; if(obs) obs.disconnect(); });
+  }
+  function mountAll(){
+    var els=document.querySelectorAll('#lessons .anim');
+    for(var i=0;i<els.length;i++) mountAnim(els[i]);
+  }
+
+  function scheduleHTML(){
+    function rowFor(block){
+      var cross=block==='left'?[3,5,7]:[9,11,13];
+      var slip=block==='left'?[2,4,6,14]:[8,10,12];
+      var h='<div class="lab">'+cap(t(block==='left'?'ovalLeft':'ovalRight'))+'</div>';
+      for(var r=1;r<=N;r++){
+        var c=cross.indexOf(r)>=0, s=slip.indexOf(r)>=0;
+        h+='<div class="b '+(c?'x':(s?'v':''))+'" title="'+t('roundH',{r:r})+'">'+(c?'X':(s?(lang==='ru'?'С':'S'):''))+'</div>';
+      }
+      return h;
+    }
+    var head='<div></div>';
+    for(var r=1;r<=N;r++) head+='<div class="rn">'+r+'</div>';
+    return '<div class="scroll-x"><div class="sched" role="img" aria-label="'+t('schedAria')+'">'+head+rowFor('left')+rowFor('right')+'</div></div><p class="hint">'+t('schedHint')+'</p>';
+  }
+  function crownHTML(){
+    var rows=get('crown'), counts=get('crownCount');
+    var h='<div class="scroll-x"><table><thead><tr><th>'+t('thRound')+'</th><th>'+t('thWork')+'</th><th>'+t('thSts')+'</th></tr></thead><tbody>';
+    rows.forEach(function(txt,i){ h+='<tr><td class="num">'+(i+1)+'</td><td>'+txt+'</td><td class="num">'+counts[i]+'</td></tr>'; });
+    return h+'</tbody></table></div><p class="hint">'+t('crownHint')+'</p>';
+  }
+
+  /* ---------- lessons (structure only; all words come from STR) ---------- */
+  var LESSON_DEFS={
+    caston:{id:'caston',level:'lvBasic',src:'наберите 76 п. плюс 1 п. для соединения'},
+    knit:{id:'knit',level:'lvBasic',src:'лицевая петля',visual:function(){ return animHTML('knit'); }},
+    purl:{id:'purl',level:'lvBasic',src:'изнаночная петля, резинка 1 на 1',visual:function(){ return animHTML('purl'); }},
+    incr:{id:'incr',level:'lvMid',src:'в 1-м р. равномерно прибавляем 8 п.'},
+    chart:{id:'chart',level:'lvMid',src:'схема узора, раппорт'},
+    slip:{id:'slip',level:'lvMid',src:'снятая петля, нить за работой',visual:function(){ return animHTML('slip'); }},
+    cableB:{id:'cableB',level:'lvAdv',src:'1 петлю снять на вспом. спицу и оставить перед работой, затем 2 лицевые, затем петлю со вспом. спицы провязать лицевой',intro:'introCables',visual:function(){ return animHTML('cableB'); }},
+    cableA:{id:'cableA',level:'lvAdv',src:'2 петли снять на вспом. спицу и оставить за работой, след. петлю провязать лицевой, затем 2 петли со вспом. спицы провязать лицевыми',intro:'introCableA',visual:function(){ return animHTML('cableA'); }},
+    oval:{id:'oval',level:'lvAdv',src:'сочетание кос и овалов',visual:scheduleHTML},
+    crown:{id:'crown',level:'lvAdv',src:'убавления в шапке',visual:function(){ return '<h3 class="sub">'+t('subSsk')+'</h3>'+animHTML('ssk')+'<h3 class="sub">'+t('subK2tog')+'</h3>'+animHTML('k2tog')+crownHTML(); }},
+    sCast:{id:'sCast',level:'lvBasic',src:'M anschl, zur Rd schließen'},
+    sChart:{id:'sChart',level:'lvMid',src:'Strickschrift'},
+    yo:{id:'yo',level:'lvMid',src:'Umschlag',visual:function(){ return animHTML('yo'); }},
+    k2tog:{id:'k2tog',level:'lvMid',src:'2 M re zusstr',visual:function(){ return animHTML('k2tog'); }},
+    skp:{id:'skp',level:'lvAdv',src:'2 M überzogen zusstr',visual:function(){ return animHTML('skp'); }},
+    inc3:{id:'inc3',level:'lvAdv',src:'aus 1 M 3 M herausstr',visual:function(){ return animHTML('inc3'); }},
+    sFinish:{id:'sFinish',level:'lvAdv',src:'abhäkeln'}
+  };
+  var LESSONS=[];
+  function refreshLessons(){ LESSONS.length=0; PATTERNS[PAT].lessons.forEach(function(id){ LESSONS.push(LESSON_DEFS[id]); }); }
+
+  function lessonHTML(l){
+    var title=t('lessons.'+l.id+'.title');
+    if(skipped[l.id]){
+      return '<div class="lesson skipped" id="lesson-'+l.id+'"><span><span class="level">'+t(l.level)+'</span> &nbsp;'+title+' <span class="muted small">'+t('skippedTag')+'</span></span><button type="button" data-show="'+l.id+'">'+t('showAgain')+'</button></div>';
+    }
+    var stepsArr=get('lessons.'+l.id+'.steps')||[];
+    var steps=stepsArr.length?'<ol>'+stepsArr.map(function(s){return '<li>'+s+'</li>';}).join('')+'</ol>':'';
+    var vis=l.visual?l.visual():'';
+    var intro=l.intro?'<p class="muted">'+t(l.intro)+'</p>':'';
+    return '<article class="lesson" id="lesson-'+l.id+'" aria-labelledby="lt-'+l.id+'">'+
+      '<div class="lesson-top"><div class="lesson-title"><span class="level">'+t(l.level)+'</span><h3 id="lt-'+l.id+'" tabindex="-1">'+title+'</h3>'+(showSrc()?'<p class="ru">'+l.src+'</p>':'')+'</div>'+
+      '<button type="button" data-skip="'+l.id+'">'+t('skipThis')+'</button></div>'+intro+steps+vis+'</article>';
+  }
+  function renderLessons(){
+    unmountAll();
+    document.getElementById('lessons').innerHTML=LESSONS.map(lessonHTML).join('');
+    mountAll();
+    var n=0; LESSONS.forEach(function(l){ if(skipped[l.id]) n++; });
+    document.getElementById('progress').textContent=t('progress',{n:n,total:LESSONS.length});
+  }
+  document.getElementById('lessons').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    if(b.getAttribute('data-skip')){ skipped[b.getAttribute('data-skip')]=true; saveSkips(); renderLessons(); }
+    else if(b.getAttribute('data-show')){ delete skipped[b.getAttribute('data-show')]; saveSkips(); renderLessons(); }
+    else if(b.getAttribute('data-view')){ animView=b.getAttribute('data-view'); applyView(); }
+  });
+  document.getElementById('skipBasics').onclick=function(){
+    LESSONS.forEach(function(l){ if(l.level==='lvBasic') skipped[l.id]=true; });
+    saveSkips(); renderLessons();
+  };
+  document.getElementById('resetSkips').onclick=function(){ skipped={}; saveSkips(); renderLessons(); };
+  function openLesson(id){
+    if(skipped[id]){ delete skipped[id]; saveSkips(); renderLessons(); }
+    var el=document.getElementById('lesson-'+id);
+    if(!el) return;
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    el.classList.add('flash');
+    setTimeout(function(){ el.classList.remove('flash'); },1600);
+    var hd=document.getElementById('lt-'+id); if(hd) hd.focus({preventScroll:true});
+  }
+
+  /* ---------- language switcher + static text ---------- */
+  var HDR={
+    hat:{h1:'h1',intro:'intro',facts:[['yarnL','yarnV'],['needlesL','needlesV'],['headL','headV'],['stitchesL','stitchesV']],note:'note',hint:'chartHint'},
+    star:{h1:'starH1',intro:'starIntro',facts:[['sYarnL','sYarnV'],['sNeedlesL','sNeedlesV'],['sSizeL','sSizeV'],['sRoundsL','sRoundsV']],note:'starNote',hint:'starChartHint'}
+  };
+  function applyStatic(){
+    var els=document.querySelectorAll('[data-i18n]');
+    for(var i=0;i<els.length;i++) els[i].textContent=t(els[i].getAttribute('data-i18n'));
+    document.documentElement.lang=lang;
+    var H=HDR[PAT];
+    document.getElementById('h1T').textContent=t(H.h1);
+    document.getElementById('introP').textContent=t(H.intro);
+    document.getElementById('noteP').textContent=t(H.note);
+    document.getElementById('chartHintP').textContent=t(H.hint);
+    document.getElementById('facts').innerHTML=H.facts.map(function(f){ return '<span><b>'+t(f[0])+'</b> '+t(f[1])+'</span>'; }).join('');
+    var bar=document.getElementById('langBar');
+    bar.setAttribute('aria-label',t('langLabel'));
+    bar.innerHTML=LANG_LIST.map(function(l){
+      return '<button type="button" data-lang="'+l.code+'" lang="'+l.code+'" title="'+l.name+'" aria-pressed="'+(l.code===lang)+'">'+l.label+'</button>';
+    }).join('');
+    var pb=document.getElementById('patBar');
+    pb.setAttribute('aria-label',t('patLabel'));
+    pb.innerHTML=['hat','star'].map(function(p){
+      return '<button type="button" data-pat="'+p+'" aria-pressed="'+(p===PAT)+'">'+t(p==='hat'?'patHat':'patStar')+'</button>';
+    }).join('');
+  }
+  document.getElementById('patBar').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-pat]'); if(!b||b.getAttribute('data-pat')===PAT) return;
+    PAT=b.getAttribute('data-pat'); sel={r:1,c:1}; misread=false;
+    renderAll();
+  });
+  document.getElementById('langBar').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-lang]'); if(!b) return;
+    lang=b.getAttribute('data-lang');
+    try{ localStorage.setItem('cableBeanieLang',lang); }catch(err){}
+    renderAll();
+  });
+
+  function render(){ drawChart(); renderRound(); renderStitch(); }
+  function renderAll(){ refreshLessons(); applyStatic(); renderLegend(); render(); renderCheck(); renderLessons(); }
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
