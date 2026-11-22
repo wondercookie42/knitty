@@ -192,6 +192,7 @@ function analyzeCore(g,w,h,lenient){
   var sym=cells.filter(function(q){return q.kind==='sym';}).length;
   if(sym<3) return fail('noSymbols');
   if(sharp<25) res.warn='blurry';
+  var lat=Math.max(1,(xs.length-1)*(ys.length-1)); res.metrics.cov=Math.round(cells.length/lat*100)/100; if(res.metrics.cov<0.6) res.partial=true;
   // clusters
   var filled=cells.filter(function(q){return q.kind==='filled';}).length;
   if(filled>0.5*cells.length) return fail('photo');
