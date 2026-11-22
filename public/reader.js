@@ -103,6 +103,16 @@ function blur(v){
     o[y*N+x]=s/n; }
   return o;
 }
+function sdist(a,b){
+  var best=1e9,dx,dy,x,y,d,s;
+  for(dy=-1;dy<=1;dy++) for(dx=-1;dx<=1;dx++){
+    d=0; s=0;
+    for(y=0;y<N;y++) for(x=0;x<N;x++){
+      var ax=x+dx, ay=y+dy, av=(ax>=0&&ay>=0&&ax<N&&ay<N)?a[ay*N+ax]:0, bv=b[y*N+x];
+      d+=Math.abs(av-bv); s+=av+bv; }
+    var q=s<1e-6?0:d/s; if(q<best) best=q; }
+  return best;
+}
 function dist(a,b){ var d=0,s=0; for(var i=0;i<a.length;i++){ d+=Math.abs(a[i]-b[i]); s+=a[i]+b[i]; } return s<1e-6?0:d/s; }
 
 /* dictionary templates, drawn as simple strokes; printed symbols vary by publisher, so these only *suggest* */
@@ -188,14 +198,19 @@ function analyzeCore(g,w,h,lenient){
   var cls=[];
   cells.forEach(function(q){
     var key=q.kind, best=null;
-    cls.forEach(function(k){ if(k.kind!==q.kind) return; var d=q.kind==='sym'?dist(q.v,k.v):0; if(d<0.36&&(!best||d<best.d)) best={d:d,k:k}; });
+    cls.forEach(function(k){ if(k.kind!==q.kind) return; var d=q.kind==='sym'?sdist(q.v,k.v):0; if(d<0.24&&(!best||d<best.d)) best={d:d,k:k}; });
     if(best){ best.k.cells.push(q); q.cl=best.k.id; }
     else { var k={id:cls.length,kind:q.kind,v:q.v,cells:[q],rep:q}; cls.push(k); q.cl=k.id; } });
   // fold tiny groups (<=2 cells) into the nearest bigger group of the same kind when they are close enough
   cls.slice().forEach(function(k){
     if(k.kind!=='sym'||k.cells.length>2) return; var best=null;
-    cls.forEach(function(o){ if(o===k||o.kind!=='sym'||o.cells.length<=2) return; var d=dist(k.v,o.v); if(d<0.5&&(!best||d<best.d)) best={d:d,o:o}; });
+    cls.forEach(function(o){ if(o===k||o.kind!=='sym'||o.cells.length<=2) return; var d=sdist(k.v,o.v); if(d<0.5&&(!best||d<best.d)) best={d:d,o:o}; });
     if(best){ k.cells.forEach(function(q){ q.cl=best.o.id; best.o.cells.push(q); }); cls.splice(cls.indexOf(k),1); } });
+  var merged=true;
+  while(merged){ merged=false;
+    for(var ia=0;ia<cls.length&&!merged;ia++) for(var ib=ia+1;ib<cls.length&&!merged;ib++){
+      var A=cls[ia],B=cls[ib]; if(A.kind!=='sym'||B.kind!=='sym') continue;
+      if(sdist(A.v,B.v)<0.12){ var big=A.cells.length>=B.cells.length?A:B, small=big===A?B:A; small.cells.forEach(function(q){ q.cl=big.id; big.cells.push(q); }); cls.splice(cls.indexOf(small),1); merged=true; } } }
   cls.sort(function(a,b){return b.cells.length-a.cells.length;});
   cls.forEach(function(k){ k.sug=suggest(k); });
   var symGroups=cls.filter(function(k){return k.kind==='sym';}).length;
@@ -259,6 +274,6 @@ function analyze(g,w,h,lenient){
   }
   return first;
 }
-window.Reader={grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist};
+window.Reader={grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist,sdist:sdist};
 
 })();

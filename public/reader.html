@@ -48,6 +48,8 @@ h2{font:700 20px "Space Grotesk",Inter,sans-serif;margin:0;text-wrap:balance}
 .tile{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:10px 12px;text-align:left;font:inherit;cursor:pointer;min-height:48px}
 .tile:hover{border-color:var(--accent);background:var(--soft)}
 .tile small{display:block;color:var(--muted)}
+.tile .gl{display:flex;gap:4px;margin-bottom:6px;color:var(--fg)}
+.tiles+.muted{font-size:13px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .pop{animation:pop .5s ease-out}
 @keyframes pop{0%{transform:scale(.9);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
@@ -103,13 +105,14 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  back:'← Examples',s1:'1 Picture',s2:'2 Mark',s3:'3 Symbols',s4:'4 Ready',
  firstFail:'I couldn\'t find the chart on my own, and that\'s normal: pages usually have text and photos around it. Please show me where it is.',
  prevHint:'Is the writing sideways? Rotate until it reads upright.',
- markT:'Show me where things are',markIntro:'Draw a box around the chart. If your picture also has a key (the list that says what each symbol means), draw a second box around it. A finger or the mouse both work.',
- toolChart:'1. The chart',toolKey:'2. The key (optional)',marked:'✓ marked',notYet:'not yet',
- keyOther:'The key is on another picture',keyNone:'There is no key; I\'ll choose meanings myself',keySkip:'No key: skipped',keyAdded:'Key picture added',
+ markT:'Show me where things are',markIntro:'Draw a box around the chart. If the page also has a symbol key (the list that says what each symbol means) or written instructions, draw a box around each. A finger or the mouse both work.',
+ toolChart:'1. The chart',toolText:'3. Written instructions (optional)',textT:'Written instructions',often:'Often drawn as',sameAs:'Same as one you already named',
+ toolKey:'2. Symbol key (optional)',marked:'✓ marked',notYet:'not yet',
+ keyOther:'The symbol key is on another picture',keyNone:'There is no symbol key; I\'ll choose meanings myself',keySkip:'No symbol key: skipped',keyAdded:'Symbol key picture added',
  readBtn:'Read my chart →',whole:'My whole picture is just the chart',
  rotL:'↺ Rotate left',rotR:'Rotate right ↻',straighten:'Straighten automatically',rotHint:'The whole photo is sideways? Rotate it here. If only the chart is sideways, mark it first, then rotate just the chart.',
  markAgain:'Mark again',
- keyT:'Your key',keyFound:'In your key, this symbol is on this line:',keyNo:'I couldn\'t match this symbol to a line of your key. Look through the key yourself and find it.',keyLook:'Find this symbol in your key and read what it says.',
+ keyT:'Your symbol key',keyFound:'In your symbol key, this symbol is on this line:',keyNo:'I couldn\'t match this symbol to a line of your symbol key. Look through it yourself and find it.',keyLook:'Find this symbol in your symbol key and read what it says.',
  
  crop:'Tip: draw a box around one chart to look at just that part.',reset:'Use the whole picture',
  cropHelp:'Draw a box around ONE chart on the picture. Use a finger or the mouse; the box can be small.',
@@ -135,13 +138,14 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  back:'← Примеры',s1:'1 Картинка',s2:'2 Разметка',s3:'3 Символы',s4:'4 Готово',
  firstFail:'Сам схему найти не получилось, и это нормально: на страницах обычно есть текст и фото вокруг. Покажите, где она.',
  prevHint:'Текст лежит боком? Поверните, чтобы он читался ровно.',
- markT:'Покажите, где что находится',markIntro:'Обведите рамкой схему. Если на картинке есть ещё и ключ (список, что значит каждый символ), обведите второй рамкой и его. Можно пальцем или мышью.',
- toolChart:'1. Схема',toolKey:'2. Ключ (необязательно)',marked:'✓ отмечено',notYet:'ещё нет',
- keyOther:'Ключ на другой картинке',keyNone:'Ключа нет, значения выберу сам',keySkip:'Без ключа',keyAdded:'Картинка с ключом добавлена',
+ markT:'Покажите, где что находится',markIntro:'Обведите рамкой схему. Если на странице есть ещё условные обозначения (список, что значит каждый символ) или текстовое описание, обведите рамкой и их. Можно пальцем или мышью.',
+ toolChart:'1. Схема',toolText:'3. Текстовое описание (необязательно)',textT:'Текстовое описание',often:'Часто рисуют так',sameAs:'Так же, как один из уже названных',
+ toolKey:'2. Условные обозначения (необязательно)',marked:'✓ отмечено',notYet:'ещё нет',
+ keyOther:'Условные обозначения на другой картинке',keyNone:'Условных обозначений нет, значения выберу сам',keySkip:'Без условных обозначений',keyAdded:'Картинка с условными обозначениями добавлена',
  readBtn:'Прочитать схему →',whole:'Вся картинка — это только схема',
  rotL:'↺ Повернуть влево',rotR:'Повернуть вправо ↻',straighten:'Выровнять автоматически',rotHint:'Всё фото лежит боком? Поверните его здесь. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
  markAgain:'Разметить заново',
- keyT:'Ваш ключ',keyFound:'В вашем ключе этот символ на такой строке:',keyNo:'Не удалось найти этот символ в строках ключа. Найдите его в ключе сами.',keyLook:'Найдите этот символ в ключе и прочитайте, что там написано.',
+ keyT:'Ваши условные обозначения',keyFound:'В ваших условных обозначениях этот символ на такой строке:',keyNo:'Не удалось найти этот символ в строках условных обозначений. Найдите его там сами.',keyLook:'Найдите этот символ в условных обозначениях и прочитайте, что там написано.',
  
  crop:'Совет: обведите рамкой одну схему, чтобы смотреть только её.',reset:'Вся картинка',
  cropHelp:'Обведите рамкой ОДНУ схему на картинке. Пальцем или мышью; рамка может быть небольшой.',
@@ -168,10 +172,10 @@ var TOK={knit:'k',blank:'k',cable:'u',purl:'p',yo:'yo',k2tog:'k2tog',skp:'skp',i
 var lang='en'; try{lang=localStorage.getItem('cableBeanieLang')||((navigator.language||'').slice(0,2)==='ru'?'ru':'en');}catch(e){} if(!T[lang]) lang='en';
 function t(k,v){ var s=(T[lang][k]!==undefined?T[lang][k]:T.en[k]); if(s===undefined) return k; if(v&&typeof s==='string') for(var q in v) s=s.split('{'+q+'}').join(v[q]); return s; }
 function $(i){return document.getElementById(i);}
-var src=document.createElement('canvas'), keySrc=null, boxes={chart:null,key:null}, tool='chart', mode='mark', failReason=null, noKey=false;
-var last=null, keyCv=null, keyInfo=null, labels={}, idx=0, finished=false, loaded=false;
+var src=document.createElement('canvas'), keySrc=null, boxes={chart:null,key:null,text:null}, tool='chart', mode='mark', failReason=null, noKey=false;
+var last=null, keyCv=null, keyInfo=null, labels={}, confirmed={}, idx=0, finished=false, loaded=false;
 var COLORS=[];for(var i=0;i<20;i++) COLORS.push('hsl('+(i*47%360)+',75%,48%)');
-var BC={chart:'#e0245e',key:'#1f6fd1'};
+var BC={chart:'#e0245e',key:'#1f6fd1',text:'#1f9d55'}, TN={chart:'toolChart',key:'toolKey',text:'toolText'};
 
 function statics(){
   document.documentElement.lang=lang; $('h1').textContent=t('h1'); $('back').textContent=t('back');
@@ -194,7 +198,7 @@ function toCanvas(file,cb){
   im.src=url;
 }
 function loadFile(f){
-  toCanvas(f,function(c){ src=c; keySrc=null; boxes={chart:null,key:null}; tool='chart'; noKey=false; labels={}; idx=0; finished=false; loaded=true; failReason=null;
+  toCanvas(f,function(c){ src=c; keySrc=null; boxes={chart:null,key:null,text:null}; tool='chart'; noKey=false; labels={}; idx=0; finished=false; loaded=true; failReason=null; confirmed={};
     $('upCard').hidden=true; $('out').hidden=false; readNow(true); });
 }
 $('file').addEventListener('change',function(){ loadFile(this.files[0]); this.value=''; });
@@ -235,7 +239,7 @@ function readNow(firstTry){
     if(score>best){ res=rr; a=v; } });
   if(!res.ok){ mode='mark'; failReason=firstTry?'firstFail':res.reason; last=null; render(); return; }
   cv.width=a.width; cv.height=a.height; cv.getContext('2d').drawImage(a,0,0);
-  last=res; mode='read'; failReason=null; labels={}; idx=0; finished=false;
+  last=res; mode='read'; failReason=null; labels={}; confirmed={}; idx=0; finished=false;
   res.clusters.forEach(function(k){ if(k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]) labels[k.id]=k.sug.label; });
   // key
   keyCv=null; keyInfo=null;
@@ -249,8 +253,8 @@ function rowsOf(res){
 }
 function paintBoxes(drag){
   var ov=$('ov'), cx=ov.getContext('2d'); cx.clearRect(0,0,ov.width,ov.height);
-  ['chart','key'].forEach(function(k){ var b=boxes[k]; if(!b||(k==='key'&&keySrc)) return; cx.strokeStyle=BC[k]; cx.lineWidth=Math.max(3,ov.width/300); cx.strokeRect(b.x,b.y,b.w,b.h);
-    cx.fillStyle=BC[k]; cx.font='bold '+Math.max(14,ov.width/45)+'px Inter,sans-serif'; cx.fillText(k==='chart'?t('toolChart'):t('toolKey'),b.x+4,b.y-6<12?b.y+Math.max(16,ov.width/40):b.y-6); });
+  ['chart','key','text'].forEach(function(k){ var b=boxes[k]; if(!b||(k==='key'&&keySrc)) return; cx.strokeStyle=BC[k]; cx.lineWidth=Math.max(3,ov.width/300); cx.strokeRect(b.x,b.y,b.w,b.h);
+    cx.fillStyle=BC[k]; cx.font='bold '+Math.max(14,ov.width/45)+'px Inter,sans-serif'; cx.fillText(t(TN[k]),b.x+4,b.y-6<12?b.y+Math.max(16,ov.width/40):b.y-6); });
   if(drag){ cx.strokeStyle=BC[tool]; cx.lineWidth=Math.max(3,ov.width/300); cx.setLineDash([10,6]); cx.strokeRect(drag.x,drag.y,drag.w,drag.h); cx.setLineDash([]); }
 }
 function paintCells(only){
@@ -275,7 +279,8 @@ function render(){
     h+='<div class="card" style="display:grid;gap:12px"><h2>'+t('markT')+'</h2><p class="muted" style="margin:0">'+t('markIntro')+'</p>'+
       '<button class="tool'+(tool==='chart'?' on':'')+'" data-tool="chart" style="--c:'+BC.chart+'"><i></i><b>'+t('toolChart')+'</b><small>'+(boxes.chart?t('marked'):t('notYet'))+'</small></button>'+
       '<button class="tool'+(tool==='key'?' on':'')+'" data-tool="key" style="--c:'+BC.key+'"><i></i><b>'+t('toolKey')+'</b><small>'+(kd?t('marked'):(noKey?t('keySkip'):t('notYet')))+'</small></button>'+
-      prevHTML('chart')+prevHTML('key')+'<div class="row"><label class="btn sec" for="keyfile" style="padding:8px 12px;font-size:14px">'+t('keyOther')+(keySrc?' ✓':'')+'</label><button class="btn sec" data-nokey="1" style="padding:8px 12px;font-size:14px">'+t('keyNone')+'</button></div>'+
+      '<button class="tool'+(tool==='text'?' on':'')+'" data-tool="text" style="--c:'+BC.text+'"><i></i><b>'+t('toolText')+'</b><small>'+(boxes.text?t('marked'):t('notYet'))+'</small></button>'+
+      prevHTML('chart')+prevHTML('key')+prevHTML('text')+'<div class="row"><label class="btn sec" for="keyfile" style="padding:8px 12px;font-size:14px">'+t('keyOther')+(keySrc?' ✓':'')+'</label><button class="btn sec" data-nokey="1" style="padding:8px 12px;font-size:14px">'+t('keyNone')+'</button></div>'+
       '<div class="row"><button class="btn" data-read="1"'+(boxes.chart?'':' disabled style="opacity:.5"')+'>'+t('readBtn')+'</button><button class="btn sec" data-whole="1">'+t('whole')+'</button></div></div>';
     side.innerHTML=h; drawPrevs(); return;
   }
@@ -288,7 +293,7 @@ function render(){
   var q=ask(), n=q.length;
   if(!n){ finished=true; steps(); doneView(rows); return; }
   idx=Math.max(0,Math.min(idx,n-1));
-  var k=q[idx], cur=labels[k.id], sug=k.sug&&k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]?k.sug.label:null;
+  var k=q[idx], cur=labels[k.id], sug=k.sug&&k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]?k.sug.label:null, prevName=nearestNamed(k); if(prevName&&!confirmed[k.id]){ sug=prevName; } 
   paintCells(k.id);
   var dots=q.map(function(o,i){return '<button data-i="'+i+'" class="'+(i===idx?'on ':'')+(labels[o.id]?'set':'')+'" aria-label="'+t('of',{i:i+1,n:n})+'"></button>';}).join('');
   var h='<div class="card pop" id="qc" style="display:grid;gap:14px"><div class="muted" style="font-size:14px">'+t('of',{i:idx+1,n:n})+'</div>'+
@@ -297,45 +302,59 @@ function render(){
   var km=matchKey(k);
   if(keyCv){ h+='<div class="msg" style="display:grid;gap:8px"><b>'+(km?t('keyFound'):t('keyNo'))+'</b>'+(km?'<div class="keybox" style="max-height:110px"><canvas id="lineView"></canvas></div>':'')+'<span class="muted" style="font-size:14px">'+t('keyLook')+'</span></div>'; }
   if(sug&&!labels['_pick'+k.id]){
-    h+='<div class="msg"><b>'+t('looks',{x:t('L')[sug][0]})+'</b><div class="row" style="margin-top:10px"><button class="btn" data-yes="'+sug+'">'+t('yes')+'</button><button class="btn sec" data-no="1">'+t('no')+'</button></div></div>';
+    h+='<div class="msg"><div class="row" style="gap:6px">'+glyphs(sug)+'</div><b>'+t('looks',{x:t('L')[sug][0]})+'</b>'+(prevName&&!confirmed[k.id]&&sug===prevName?'<div class="muted" style="font-size:14px">'+t('sameAs')+'</div>':'')+'<div class="row" style="margin-top:10px"><button class="btn" data-yes="'+sug+'">'+t('yes')+'</button><button class="btn sec" data-no="1">'+t('no')+'</button></div></div>';
   }else{
-    h+='<div class="tiles">'+['knit','purl','yo','k2tog','skp','inc3','cable','blank','nostitch','unknown'].map(function(o){return '<button class="tile" data-set="'+o+'"'+(cur===o?' style="border-color:var(--accent);background:var(--soft)"':'')+'><b>'+t('L')[o][0]+'</b>'+(t('L')[o][1]?'<small>'+t('L')[o][1]+'</small>':'')+'</button>';}).join('')+'</div>';
+    h+='<div class="tiles">'+['knit','purl','yo','k2tog','skp','inc3','cable','blank','nostitch','unknown'].map(function(o){return '<button class="tile" data-set="'+o+'"'+(cur===o?' style="border-color:var(--accent);background:var(--soft)"':'')+'><span class="gl">'+glyphs(o)+'</span><b>'+t('L')[o][0]+'</b>'+(t('L')[o][1]?'<small>'+t('L')[o][1]+'</small>':'')+'</button>';}).join('')+'</div>';
   }
   h+='<div class="row" style="justify-content:space-between"><div class="dots">'+dots+'</div><div class="row">'+(idx>0?'<button class="btn sec" data-nav="-1">'+t('back1')+'</button>':'')+(cur&&idx<n-1?'<button class="btn" data-nav="1">'+t('next')+'</button>':'')+(cur&&idx===n-1?'<button class="btn" data-fin="1">'+t('start')+'</button>':'')+'</div></div></div>';
   h+='<div class="msg">'+t('found',{rows:rows.length,cells:last.cells.length})+(last.warn?' '+t('warnBlur'):'')+'</div>';
-  $('keyHolder').innerHTML=keyCv?'<b>'+t('keyT')+'</b><div class="keybox" style="margin-top:6px"><canvas id="keyView"></canvas></div>':'';
+  $('keyHolder').innerHTML=(keyCv?'<b>'+t('keyT')+'</b><div class="keybox" style="margin-top:6px"><canvas id="keyView"></canvas></div>':'')+(boxes.text?'<details style="margin-top:10px" open><summary><b>'+t('textT')+'</b></summary><div class="keybox" style="margin-top:6px"><canvas id="textView"></canvas></div></details>':'');
   side.innerHTML=h;
   var bc=$('bigsym').getContext('2d'); bc.fillStyle='#fff'; bc.fillRect(0,0,112,112); var r=k.rep; bc.drawImage(cv,r.x0,r.y0,r.x1-r.x0,r.y1-r.y0,0,0,112,112);
+  if(boxes.text){ var tc=regionOf(src,boxes.text), tv=$('textView'); tv.width=tc.width; tv.height=tc.height; tv.getContext('2d').drawImage(tc,0,0); }
   if(keyCv){ var kv=$('keyView'); kv.width=keyCv.width; kv.height=keyCv.height; var kx=kv.getContext('2d'); kx.drawImage(keyCv,0,0);
     if(km){ kx.strokeStyle='#e0245e'; kx.lineWidth=Math.max(3,keyCv.width/200); kx.strokeRect(km.L.x0-3,km.L.y0-3,km.L.end-km.L.x0+8,km.L.y1-km.L.y0+6);
       var lv=$('lineView'), pad=4, lw=km.L.end-km.L.x0+2*pad, lh=km.L.y1-km.L.y0+2*pad; lv.width=lw; lv.height=lh; lv.getContext('2d').drawImage(keyCv,km.L.x0-pad,km.L.y0-pad,lw,lh,0,0,lw,lh); } }
 }
 function prevHTML(k){
   var b=boxes[k]; if(!b||(k==='key'&&keySrc&&false)) return '';
-  return '<div class="msg" style="display:grid;gap:8px"><b>'+t(k==='chart'?'toolChart':'toolKey')+'</b><div class="keybox" style="max-height:150px"><canvas data-prev="'+k+'"></canvas></div><div class="row"><button class="btn sec" data-rot="'+k+':-1" style="padding:6px 12px;font-size:14px">'+t('rotL')+'</button><button class="btn sec" data-rot="'+k+':1" style="padding:6px 12px;font-size:14px">'+t('rotR')+'</button></div><span class="muted" style="font-size:13px">'+t('prevHint')+'</span></div>';
+  return '<div class="msg" style="display:grid;gap:8px"><b>'+t(TN[k])+'</b><div class="keybox" style="max-height:150px"><canvas data-prev="'+k+'"></canvas></div><div class="row"><button class="btn sec" data-rot="'+k+':-1" style="padding:6px 12px;font-size:14px">'+t('rotL')+'</button><button class="btn sec" data-rot="'+k+':1" style="padding:6px 12px;font-size:14px">'+t('rotR')+'</button></div><span class="muted" style="font-size:13px">'+t('prevHint')+'</span></div>';
 }
 function drawPrevs(){
-  ['chart','key'].forEach(function(k){ var b=boxes[k], cv=document.querySelector('canvas[data-prev="'+k+'"]'); if(!b||!cv) return;
+  ['chart','key','text'].forEach(function(k){ var b=boxes[k], cv=document.querySelector('canvas[data-prev="'+k+'"]'); if(!b||!cv) return;
     var c=regionOf(k==='key'&&keySrc?keySrc:src,b); cv.width=c.width; cv.height=c.height; cv.getContext('2d').drawImage(c,0,0); });
+}
+var GL={
+  knit:['<path d="M14 6V22"/>',''], purl:['<path d="M6 14H22"/>','<circle cx="14" cy="14" r="2.6" fill="currentColor"/>'],
+  yo:['<circle cx="14" cy="14" r="6"/>','<path d="M8 6V15A6 6 0 0 0 20 15V6"/>'],
+  k2tog:['<path d="M7 22L21 6"/>','<path d="M7 7L14 22L21 7"/>'], skp:['<path d="M7 6L21 22"/>','<path d="M14 5V21M9 16L14 21L19 16"/>'],
+  inc3:['<path d="M4 21Q14 29 24 21"/><path d="M14 6V19"/>'], cable:['<path d="M6 6L22 22M22 6L6 22"/>'],
+  blank:[''], nostitch:['<rect x="3" y="3" width="22" height="22" fill="currentColor" opacity=".25" stroke="none"/>'],
+  unknown:['<text x="14" y="21" text-anchor="middle" font-size="18" fill="currentColor" stroke="none">?</text>']};
+function glyphs(o){ return (GL[o]||[]).map(function(g){ return '<svg viewBox="0 0 28 28" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="3" stroke="var(--line)" stroke-width="1.5"/>'+g+'</svg>'; }).join(''); }
+function nearestNamed(k){
+  var best=null; last.clusters.forEach(function(o){ if(o===k||o.kind!=='sym'||!confirmed[o.id]||!labels[o.id]||labels[o.id]==='unknown'||labels[o.id]==='cable') return;
+    var d=Reader.sdist(k.v,o.v); if(d<0.5&&(!best||d<best.d)) best={d:d,l:labels[o.id]}; });
+  return best&&best.l;
 }
 function matchKey(k){
   if(!keyInfo||!keyInfo.lines.length) return null; var best=null;
-  keyInfo.lines.forEach(function(L){ var d=Reader.dist(k.v,L.fp); if(!best||d<best.d) best={d:d,L:L}; });
-  return best&&best.d<0.5?best:null;
+  keyInfo.lines.forEach(function(L){ var d=Reader.sdist(k.v,L.fp); if(!best||d<best.d) best={d:d,L:L}; });
+  return best&&best.d<0.55?best:null;
 }
 $('side').addEventListener('click',function(e){
   var b=e.target.closest('button'); if(!b) return;
   if(mode==='mark'){
     if(b.dataset.tool){ tool=b.dataset.tool; render(); }
-    else if(b.dataset.rot){ var pr=b.dataset.rot.split(':'); var bx=boxes[pr[0]]; if(bx){ bx.rot=((bx.rot||0)+(+pr[1])+4)%4; if(pr[0]==='chart'&&boxes.key&&!keySrc) boxes.key.rot=bx.rot; } render(); }
+    else if(b.dataset.rot){ var pr=b.dataset.rot.split(':'); var bx=boxes[pr[0]]; if(bx){ bx.rot=((bx.rot||0)+(+pr[1])+4)%4; if(pr[0]==='chart'){ if(boxes.key&&!keySrc) boxes.key.rot=bx.rot; if(boxes.text) boxes.text.rot=bx.rot; } } render(); }
     else if(b.dataset.nokey){ noKey=true; boxes.key=null; keySrc=null; tool='chart'; render(); }
     else if(b.dataset.read){ readNow(false); }
     else if(b.dataset.whole){ boxes.chart=null; readNow(false); }
     return; }
   if(!last||!last.ok) return; var q=ask(), k=q[idx];
-  if(b.dataset.yes){ labels[k.id]=b.dataset.yes; advance(q); }
+  if(b.dataset.yes){ labels[k.id]=b.dataset.yes; confirmed[k.id]=1; advance(q); }
   else if(b.dataset.no){ labels['_pick'+k.id]=1; render(); }
-  else if(b.dataset.set){ labels[k.id]=b.dataset.set; advance(q); }
+  else if(b.dataset.set){ labels[k.id]=b.dataset.set; confirmed[k.id]=1; advance(q); }
   else if(b.dataset.nav){ idx+=+b.dataset.nav; render(); }
   else if(b.dataset.fin){ finish(); }
   else if(b.dataset.i){ idx=+b.dataset.i; render(); }
@@ -376,7 +395,7 @@ function go(){
   ov.addEventListener('pointermove',function(e){ if(!a) return; paintBoxes(box(a,pt(e))); });
   ov.addEventListener('pointerup',function(e){ if(!a) return; var b=box(a,pt(e)); a=null;
     if(b.w<30||b.h<30){ paintBoxes(); return; }
-    b.rot=(tool==='key'&&boxes.chart)?boxes.chart.rot:0; boxes[tool]=b; if(tool==='key') keySrc=null; if(tool==='chart'&&!boxes.key&&!noKey) tool='key'; failReason=null; render(); });
+    b.rot=(tool!=='chart'&&boxes.chart)?boxes.chart.rot:0; boxes[tool]=b; if(tool==='key') keySrc=null; if(tool==='chart'&&!boxes.key&&!noKey) tool='key'; failReason=null; render(); });
 })();
 statics();
 window.__readerDebug=function(){return {last:last,labels:labels};};
