@@ -55,6 +55,15 @@ h2{font:700 20px "Space Grotesk",Inter,sans-serif;margin:0;text-wrap:balance}
 .dots{display:flex;gap:6px;flex-wrap:wrap}
 .dots button{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:var(--surface);padding:0;cursor:pointer}
 .dots button.on{border-color:var(--accent)} .dots button.set{background:var(--accent);border-color:var(--accent)}
+.tool{display:flex;gap:8px;align-items:center;border:2px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:10px 12px;font:inherit;text-align:left;cursor:pointer;width:100%}
+.tool.on{border-color:var(--c)}
+.tool i{width:16px;height:16px;border-radius:4px;background:var(--c);flex:none}
+.tool small{margin-left:auto;color:var(--muted)}
+.tbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:14px}
+.tbar .btn{padding:6px 12px;font-size:14px}
+.tbar label.chk{display:flex;gap:6px;align-items:center;cursor:pointer}
+.keybox{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;line-height:0}
+.keybox canvas{width:100%;height:auto;display:block}
 table{border-collapse:collapse;font-size:13px} td{border-bottom:1px solid var(--line);padding:3px 8px}
 </style>
 </head>
@@ -67,16 +76,18 @@ table{border-collapse:collapse;font-size:13px} td{border-bottom:1px solid var(--
 <div class="card" id="upCard">
   <p id="intro" style="margin:0 0 14px;font-size:17px"></p>
   <label class="drop" id="drop" for="file"><b id="dropT"></b><br><span class="muted" id="dropS"></span></label>
-  <input id="file" type="file" accept="image/*" hidden>
+  <input id="file" type="file" accept="image/*" hidden><input id="keyfile" type="file" accept="image/*" hidden>
   <p class="muted" style="margin:12px 0 0;font-size:14px"><span id="privacy"></span> <a href="/" id="exLink"></a></p>
 </div>
 
 <div id="out" hidden>
  <div class="cols">
   <div class="card">
+    <div class="tbar" id="tbar" hidden><button class="btn sec" id="rotL"></button><button class="btn sec" id="rotR"></button><label class="chk"><input type="checkbox" id="auto" checked> <span id="autoT"></span></label></div>
     <div class="stage" id="stage"><canvas id="cv"></canvas><canvas id="ov" style="position:absolute;left:0;top:0;width:100%;height:100%;cursor:crosshair"></canvas></div>
     <p class="muted" id="cropHint" style="margin:8px 0 0;font-size:14px"></p>
-    <div class="row" style="margin-top:8px"><label class="btn sec" for="file" id="another"></label><button class="btn sec" id="reset" hidden></button></div>
+    <div id="keyHolder" style="margin-top:12px"></div>
+    <div class="row" style="margin-top:8px"><label class="btn sec" for="file" id="another"></label><button class="btn sec" id="markAgain" hidden></button></div>
   </div>
   <div style="display:grid;gap:16px;align-content:start" id="side"></div>
  </div>
@@ -89,7 +100,17 @@ var LANGS=[['en','EN'],['ru','RU']];
 var T={
 en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitting chart. I\'ll find the grid, and you only answer a few easy questions about the symbols. No knitting knowledge needed to start.',
  dropT:'Tap to choose a photo, or drop it here',dropS:'You can also paste an image',privacy:'Your picture stays on your device and is never uploaded.',exLink:'Or try a ready-made example first →',
- back:'← Examples',s1:'1 Picture',s2:'2 Symbols',s3:'3 Ready',
+ back:'← Examples',s1:'1 Picture',s2:'2 Mark',s3:'3 Symbols',s4:'4 Ready',
+ firstFail:'I couldn\'t find the chart on my own, and that\'s normal: pages usually have text and photos around it. Please show me where it is.',
+ prevHint:'Is the writing sideways? Rotate until it reads upright.',
+ markT:'Show me where things are',markIntro:'Draw a box around the chart. If your picture also has a key (the list that says what each symbol means), draw a second box around it. A finger or the mouse both work.',
+ toolChart:'1. The chart',toolKey:'2. The key (optional)',marked:'✓ marked',notYet:'not yet',
+ keyOther:'The key is on another picture',keyNone:'There is no key; I\'ll choose meanings myself',keySkip:'No key: skipped',keyAdded:'Key picture added',
+ readBtn:'Read my chart →',whole:'My whole picture is just the chart',
+ rotL:'↺ Rotate left',rotR:'Rotate right ↻',straighten:'Straighten automatically',rotHint:'The whole photo is sideways? Rotate it here. If only the chart is sideways, mark it first, then rotate just the chart.',
+ markAgain:'Mark again',
+ keyT:'Your key',keyFound:'In your key, this symbol is on this line:',keyNo:'I couldn\'t match this symbol to a line of your key. Look through the key yourself and find it.',keyLook:'Find this symbol in your key and read what it says.',
+ 
  crop:'Tip: draw a box around one chart to look at just that part.',reset:'Use the whole picture',
  cropHelp:'Draw a box around ONE chart on the picture. Use a finger or the mouse; the box can be small.',
  tooSmall:'This picture is too small for me to see the symbols. A bigger photo or screenshot will work.',
@@ -111,7 +132,17 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  L:{knit:['knit','the most common stitch'],purl:['purl','a little bump on the front'],yo:['yarn over','a deliberate hole'],k2tog:['knit 2 together','two stitches become one'],skp:['slip, knit, pass over','two become one, leaning left'],inc3:['one into three','one stitch grows into three'],blank:['empty square','means knit on the front'],nostitch:['no stitch','a filler, skip it'],unknown:['I\'m not sure',''],cable:['cable or crossing','I can\'t explain these yet']}},
 ru:{h1:'Давайте прочитаем вашу схему',intro:'Загрузите фото или скриншот схемы вязания. Я найду сетку, а вам нужно будет ответить на несколько простых вопросов о символах. Знать вязание для старта не нужно.',
  dropT:'Нажмите, чтобы выбрать фото, или перетащите его сюда',dropS:'Можно и вставить картинку',privacy:'Картинка остаётся на вашем устройстве и никуда не загружается.',exLink:'Или сначала посмотрите готовый пример →',
- back:'← Примеры',s1:'1 Картинка',s2:'2 Символы',s3:'3 Готово',
+ back:'← Примеры',s1:'1 Картинка',s2:'2 Разметка',s3:'3 Символы',s4:'4 Готово',
+ firstFail:'Сам схему найти не получилось, и это нормально: на страницах обычно есть текст и фото вокруг. Покажите, где она.',
+ prevHint:'Текст лежит боком? Поверните, чтобы он читался ровно.',
+ markT:'Покажите, где что находится',markIntro:'Обведите рамкой схему. Если на картинке есть ещё и ключ (список, что значит каждый символ), обведите второй рамкой и его. Можно пальцем или мышью.',
+ toolChart:'1. Схема',toolKey:'2. Ключ (необязательно)',marked:'✓ отмечено',notYet:'ещё нет',
+ keyOther:'Ключ на другой картинке',keyNone:'Ключа нет, значения выберу сам',keySkip:'Без ключа',keyAdded:'Картинка с ключом добавлена',
+ readBtn:'Прочитать схему →',whole:'Вся картинка — это только схема',
+ rotL:'↺ Повернуть влево',rotR:'Повернуть вправо ↻',straighten:'Выровнять автоматически',rotHint:'Всё фото лежит боком? Поверните его здесь. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
+ markAgain:'Разметить заново',
+ keyT:'Ваш ключ',keyFound:'В вашем ключе этот символ на такой строке:',keyNo:'Не удалось найти этот символ в строках ключа. Найдите его в ключе сами.',keyLook:'Найдите этот символ в ключе и прочитайте, что там написано.',
+ 
  crop:'Совет: обведите рамкой одну схему, чтобы смотреть только её.',reset:'Вся картинка',
  cropHelp:'Обведите рамкой ОДНУ схему на картинке. Пальцем или мышью; рамка может быть небольшой.',
  tooSmall:'Картинка слишком маленькая, символов не разглядеть. Подойдёт фото или скриншот побольше.',
@@ -137,72 +168,120 @@ var TOK={knit:'k',blank:'k',cable:'u',purl:'p',yo:'yo',k2tog:'k2tog',skp:'skp',i
 var lang='en'; try{lang=localStorage.getItem('cableBeanieLang')||((navigator.language||'').slice(0,2)==='ru'?'ru':'en');}catch(e){} if(!T[lang]) lang='en';
 function t(k,v){ var s=(T[lang][k]!==undefined?T[lang][k]:T.en[k]); if(s===undefined) return k; if(v&&typeof s==='string') for(var q in v) s=s.split('{'+q+'}').join(v[q]); return s; }
 function $(i){return document.getElementById(i);}
-var src=document.createElement('canvas'), crop=null, last=null, labels={}, idx=0, finished=false;
+var src=document.createElement('canvas'), keySrc=null, boxes={chart:null,key:null}, tool='chart', mode='mark', failReason=null, noKey=false;
+var last=null, keyCv=null, keyInfo=null, labels={}, idx=0, finished=false, loaded=false;
 var COLORS=[];for(var i=0;i<20;i++) COLORS.push('hsl('+(i*47%360)+',75%,48%)');
+var BC={chart:'#e0245e',key:'#1f6fd1'};
 
 function statics(){
   document.documentElement.lang=lang; $('h1').textContent=t('h1'); $('back').textContent=t('back');
   $('intro').textContent=t('intro'); $('dropT').textContent=t('dropT'); $('dropS').textContent=t('dropS'); $('privacy').textContent=t('privacy'); $('exLink').textContent=t('exLink');
-  $('cropHint').textContent=t('crop'); $('another').textContent=t('another'); $('reset').textContent=t('reset');
+  $('another').textContent=t('another'); $('markAgain').textContent=t('markAgain'); $('rotL').textContent=t('rotL'); $('rotR').textContent=t('rotR'); $('autoT').textContent=t('straighten');
   $('lang').innerHTML=LANGS.map(function(l){return '<button data-l="'+l[0]+'" aria-pressed="'+(l[0]===lang)+'">'+l[1]+'</button>';}).join('');
   steps();
 }
 function steps(){
-  var cur=!last?1:(last.ok&&!finished?2:(finished?3:1));
-  $('steps').innerHTML=['s1','s2','s3'].map(function(k,i){return '<span class="'+(i+1===cur?'on':(i+1<cur?'done':''))+'">'+t(k)+'</span>';}).join('');
+  var cur=!loaded?1:(mode==='mark'?2:(finished?4:3));
+  $('steps').innerHTML=['s1','s2','s3','s4'].map(function(k,i){return '<span class="'+(i+1===cur?'on':(i+1<cur?'done':''))+'">'+t(k)+'</span>';}).join('');
 }
-$('lang').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b) return; lang=b.dataset.l; try{localStorage.setItem('cableBeanieLang',lang);}catch(x){} statics(); if(last) render(); });
+$('lang').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b) return; lang=b.dataset.l; try{localStorage.setItem('cableBeanieLang',lang);}catch(x){} statics(); if(loaded) render(); });
 
-function loadFile(f){
-  if(!f||!/^image\//.test(f.type)) return;
-  var url=URL.createObjectURL(f), im=new Image();
-  im.onload=function(){
-    var s=Math.min(1,1600/Math.max(im.width,im.height)); src.width=Math.round(im.width*s); src.height=Math.round(im.height*s);
-    src.getContext('2d').drawImage(im,0,0,src.width,src.height); URL.revokeObjectURL(url); crop=null; labels={}; idx=0; finished=false; analyse();
-  }; im.src=url;
+function toCanvas(file,cb){
+  if(!file||!/^image\//.test(file.type)) return;
+  var url=URL.createObjectURL(file), im=new Image();
+  im.onload=function(){ var s=Math.min(1,2000/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s);
+    var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url); cb(c); };
+  im.src=url;
 }
-$('file').addEventListener('change',function(){ loadFile(this.files[0]); });
+function loadFile(f){
+  toCanvas(f,function(c){ src=c; keySrc=null; boxes={chart:null,key:null}; tool='chart'; noKey=false; labels={}; idx=0; finished=false; loaded=true; failReason=null;
+    $('upCard').hidden=true; $('out').hidden=false; readNow(true); });
+}
+$('file').addEventListener('change',function(){ loadFile(this.files[0]); this.value=''; });
+$('keyfile').addEventListener('change',function(){ toCanvas(this.files[0],function(c){ keySrc=c; boxes.key={x:0,y:0,w:c.width,h:c.height,rot:0}; noKey=false; render(); }); this.value=''; });
 var dr=$('drop');
 ['dragover','dragenter'].forEach(function(n){dr.addEventListener(n,function(e){e.preventDefault();dr.classList.add('over');});});
 ['dragleave','drop'].forEach(function(n){dr.addEventListener(n,function(e){e.preventDefault();dr.classList.remove('over');});});
 dr.addEventListener('drop',function(e){ loadFile(e.dataTransfer.files[0]); });
 document.addEventListener('paste',function(e){ var it=[].slice.call(e.clipboardData.items||[]).filter(function(i){return /^image\//.test(i.type);})[0]; if(it) loadFile(it.getAsFile()); });
-$('reset').addEventListener('click',function(){ crop=null; labels={}; idx=0; finished=false; analyse(); });
 
-function analyse(){
-  var c=crop||{x:0,y:0,w:src.width,h:src.height}, cv=$('cv');
-  var s=Math.min(2,1400/Math.max(c.w,c.h)); cv.width=Math.max(1,Math.round(c.w*s)); cv.height=Math.max(1,Math.round(c.h*s));
-  var x=cv.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,cv.width,cv.height); x.drawImage(src,c.x,c.y,c.w,c.h,0,0,cv.width,cv.height);
-  var ov=$('ov'); ov.width=cv.width; ov.height=cv.height;
-  var res=Reader.analyze(Reader.grayFromCanvas(cv),cv.width,cv.height);
-  last=res; $('upCard').hidden=true; $('out').hidden=false; $('reset').hidden=!crop;
-  if(res.ok){ res.clusters.forEach(function(k){ if(labels[k.id]===undefined&&k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]) labels[k.id]=k.sug.label; }); }
-  render(); $('out').scrollIntoView({behavior:'smooth',block:'start'});
+function rotated(c,deg){
+  var o=document.createElement('canvas'), r=deg*Math.PI/180, w=c.width, h=c.height;
+  var W=Math.ceil(Math.abs(w*Math.cos(r))+Math.abs(h*Math.sin(r))-1e-6), H=Math.ceil(Math.abs(w*Math.sin(r))+Math.abs(h*Math.cos(r))-1e-6);
+  o.width=W; o.height=H; var x=o.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,W,H); x.translate(W/2,H/2); x.rotate(r); x.drawImage(c,-w/2,-h/2); return o;
+}
+function cropOf(c,b){ b=b||{x:0,y:0,w:c.width,h:c.height}; var o=document.createElement('canvas'); o.width=Math.max(1,Math.round(b.w)); o.height=Math.max(1,Math.round(b.h));
+  var x=o.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,o.width,o.height); x.drawImage(c,b.x,b.y,b.w,b.h,0,0,o.width,o.height); return o; }
+function regionOf(c,b){ var o=cropOf(c,b); return (b&&b.rot)?rotated(o,b.rot*90):o; }
+function variants(c,maxSide){
+  var list=[prep(c,maxSide)];
+  if($('auto').checked){ var a=Reader.estimateSkew(c); if(Math.abs(a)>=0.3) list.push(prep(rotated(c,-a),maxSide)); }
+  return list;
+}
+function prep(c,maxSide){
+  var s=Math.min(maxSide==null?3:maxSide,1600/Math.max(c.width,c.height)), o=document.createElement('canvas'); o.width=Math.max(1,Math.round(c.width*s)); o.height=Math.max(1,Math.round(c.height*s));
+  var x=o.getContext('2d'); x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high'; x.fillStyle='#fff'; x.fillRect(0,0,o.width,o.height); x.drawImage(c,0,0,o.width,o.height); return o;
+}
+$('rotL').addEventListener('click',function(){ src=rotated(src,-90); boxes.chart=null; if(!keySrc) boxes.key=null; render(); });
+$('rotR').addEventListener('click',function(){ src=rotated(src,90); boxes.chart=null; if(!keySrc) boxes.key=null; render(); });
+$('markAgain').addEventListener('click',function(){ mode='mark'; finished=false; render(); });
+
+/* read the picture: first try the whole thing (clean charts need no marking), else ask the user to mark */
+function readNow(firstTry){
+  var cv=$('cv'), reg=regionOf(src,boxes.chart), a=null, res=null;
+  variants(reg).forEach(function(v){
+    var rr=Reader.analyze(Reader.grayFromCanvas(v),v.width,v.height,!!boxes.chart);
+    var score=rr.ok?rr.cells.length*(rr.metrics.s4||0.5):-1, best=res?(res.ok?res.cells.length*(res.metrics.s4||0.5):-1):-2;
+    if(score>best){ res=rr; a=v; } });
+  if(!res.ok){ mode='mark'; failReason=firstTry?'firstFail':res.reason; last=null; render(); return; }
+  cv.width=a.width; cv.height=a.height; cv.getContext('2d').drawImage(a,0,0);
+  last=res; mode='read'; failReason=null; labels={}; idx=0; finished=false;
+  res.clusters.forEach(function(k){ if(k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]) labels[k.id]=k.sug.label; });
+  // key
+  keyCv=null; keyInfo=null;
+  var kb=boxes.key, ks=keySrc||src;
+  if(kb){ var bestL=-1; variants(regionOf(ks,kb),3).forEach(function(kc){ var ln=[]; try{ ln=Reader.legendLines(Reader.grayFromCanvas(kc),kc.width,kc.height); }catch(e){} if(ln.length>bestL){ bestL=ln.length; keyCv=kc; keyInfo={lines:ln}; } }); }
+  render();
 }
 function rowsOf(res){
   var by={}; res.cells.forEach(function(q){ (by[q.r]=by[q.r]||[]).push(q); });
   return Object.keys(by).map(Number).sort(function(a,b){return b-a;}).map(function(r){return by[r].sort(function(a,b){return a.c-b.c;});});
 }
-function paintOverlay(only){
+function paintBoxes(drag){
   var ov=$('ov'), cx=ov.getContext('2d'); cx.clearRect(0,0,ov.width,ov.height);
-  if(!last||!last.ok) return;
+  ['chart','key'].forEach(function(k){ var b=boxes[k]; if(!b||(k==='key'&&keySrc)) return; cx.strokeStyle=BC[k]; cx.lineWidth=Math.max(3,ov.width/300); cx.strokeRect(b.x,b.y,b.w,b.h);
+    cx.fillStyle=BC[k]; cx.font='bold '+Math.max(14,ov.width/45)+'px Inter,sans-serif'; cx.fillText(k==='chart'?t('toolChart'):t('toolKey'),b.x+4,b.y-6<12?b.y+Math.max(16,ov.width/40):b.y-6); });
+  if(drag){ cx.strokeStyle=BC[tool]; cx.lineWidth=Math.max(3,ov.width/300); cx.setLineDash([10,6]); cx.strokeRect(drag.x,drag.y,drag.w,drag.h); cx.setLineDash([]); }
+}
+function paintCells(only){
+  var ov=$('ov'), cx=ov.getContext('2d'); cx.clearRect(0,0,ov.width,ov.height);
   last.cells.forEach(function(q){
     var on=(only===undefined||q.cl===only);
     cx.fillStyle=on?'rgba(224,36,94,.28)':'rgba(255,255,255,.55)'; cx.fillRect(q.x0,q.y0,q.x1-q.x0,q.y1-q.y0);
     if(on){ cx.strokeStyle='#e0245e'; cx.lineWidth=2; cx.strokeRect(q.x0+1,q.y0+1,q.x1-q.x0-2,q.y1-q.y0-2); } });
 }
-function clusters(){ return last.clusters.filter(function(k){return k.kind==='sym'||k.kind==='blank'||k.kind==='filled';}); }
-function autoKinds(){ // blank/filled clusters are answered for the user
-  last.clusters.forEach(function(k){ if(labels[k.id]===undefined){ if(k.kind==='blank') labels[k.id]='blank'; else if(k.kind==='filled') labels[k.id]='nostitch'; } });
-}
 function ask(){ return last.clusters.filter(function(k){return k.kind==='sym';}); }
+function autoKinds(){ last.clusters.forEach(function(k){ if(labels[k.id]===undefined){ if(k.kind==='blank') labels[k.id]='blank'; else if(k.kind==='filled') labels[k.id]='nostitch'; } }); }
 
 function render(){
-  steps(); var side=$('side'), st=$('stage');
-  st.classList.remove('pulse');
-  if(!last.ok){
-    paintOverlay(); st.classList.add('pulse'); finished=false;
-    side.innerHTML='<div class="msg bad pop"><b>'+t(last.reason)+'</b></div><div class="msg"><b>'+t('cropHelp')+'</b></div>'; return; }
+  steps(); var side=$('side'), st=$('stage'), cv=$('cv'), ov=$('ov');
+  $('another').hidden=false;
+  if(mode==='mark'){
+    cv.width=src.width; cv.height=src.height; cv.getContext('2d').drawImage(src,0,0); ov.width=src.width; ov.height=src.height; ov.style.pointerEvents='auto';
+    $('keyHolder').innerHTML=''; $('tbar').hidden=false; $('markAgain').hidden=true; st.classList.add('pulse'); paintBoxes();
+    $('cropHint').textContent=t('rotHint');
+    var kd=!!boxes.key, h='';
+    if(failReason) h+='<div class="msg bad pop"><b>'+t(failReason)+'</b></div>';
+    h+='<div class="card" style="display:grid;gap:12px"><h2>'+t('markT')+'</h2><p class="muted" style="margin:0">'+t('markIntro')+'</p>'+
+      '<button class="tool'+(tool==='chart'?' on':'')+'" data-tool="chart" style="--c:'+BC.chart+'"><i></i><b>'+t('toolChart')+'</b><small>'+(boxes.chart?t('marked'):t('notYet'))+'</small></button>'+
+      '<button class="tool'+(tool==='key'?' on':'')+'" data-tool="key" style="--c:'+BC.key+'"><i></i><b>'+t('toolKey')+'</b><small>'+(kd?t('marked'):(noKey?t('keySkip'):t('notYet')))+'</small></button>'+
+      prevHTML('chart')+prevHTML('key')+'<div class="row"><label class="btn sec" for="keyfile" style="padding:8px 12px;font-size:14px">'+t('keyOther')+(keySrc?' ✓':'')+'</label><button class="btn sec" data-nokey="1" style="padding:8px 12px;font-size:14px">'+t('keyNone')+'</button></div>'+
+      '<div class="row"><button class="btn" data-read="1"'+(boxes.chart?'':' disabled style="opacity:.5"')+'>'+t('readBtn')+'</button><button class="btn sec" data-whole="1">'+t('whole')+'</button></div></div>';
+    side.innerHTML=h; drawPrevs(); return;
+  }
+  // read mode
+  $('tbar').hidden=true; $('markAgain').hidden=false; st.classList.remove('pulse'); ov.style.pointerEvents='none'; ov.width=cv.width; ov.height=cv.height;
+  $('cropHint').textContent='';
   autoKinds();
   var rows=rowsOf(last);
   if(finished){ doneView(rows); return; }
@@ -210,11 +289,13 @@ function render(){
   if(!n){ finished=true; steps(); doneView(rows); return; }
   idx=Math.max(0,Math.min(idx,n-1));
   var k=q[idx], cur=labels[k.id], sug=k.sug&&k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]?k.sug.label:null;
-  paintOverlay(k.cl!==undefined?k.id:undefined);
+  paintCells(k.id);
   var dots=q.map(function(o,i){return '<button data-i="'+i+'" class="'+(i===idx?'on ':'')+(labels[o.id]?'set':'')+'" aria-label="'+t('of',{i:i+1,n:n})+'"></button>';}).join('');
   var h='<div class="card pop" id="qc" style="display:grid;gap:14px"><div class="muted" style="font-size:14px">'+t('of',{i:idx+1,n:n})+'</div>'+
     '<div class="bar"><i style="width:'+Math.round(idx/n*100)+'%"></i></div>'+
     '<div class="big"><canvas id="bigsym" width="112" height="112"></canvas><div><h2>'+t('q')+'</h2><p class="muted" style="margin:4px 0 0;font-size:14px">'+t('appears',{n:k.cells.length})+'</p></div></div>';
+  var km=matchKey(k);
+  if(keyCv){ h+='<div class="msg" style="display:grid;gap:8px"><b>'+(km?t('keyFound'):t('keyNo'))+'</b>'+(km?'<div class="keybox" style="max-height:110px"><canvas id="lineView"></canvas></div>':'')+'<span class="muted" style="font-size:14px">'+t('keyLook')+'</span></div>'; }
   if(sug&&!labels['_pick'+k.id]){
     h+='<div class="msg"><b>'+t('looks',{x:t('L')[sug][0]})+'</b><div class="row" style="margin-top:10px"><button class="btn" data-yes="'+sug+'">'+t('yes')+'</button><button class="btn sec" data-no="1">'+t('no')+'</button></div></div>';
   }else{
@@ -222,11 +303,36 @@ function render(){
   }
   h+='<div class="row" style="justify-content:space-between"><div class="dots">'+dots+'</div><div class="row">'+(idx>0?'<button class="btn sec" data-nav="-1">'+t('back1')+'</button>':'')+(cur&&idx<n-1?'<button class="btn" data-nav="1">'+t('next')+'</button>':'')+(cur&&idx===n-1?'<button class="btn" data-fin="1">'+t('start')+'</button>':'')+'</div></div></div>';
   h+='<div class="msg">'+t('found',{rows:rows.length,cells:last.cells.length})+(last.warn?' '+t('warnBlur'):'')+'</div>';
+  $('keyHolder').innerHTML=keyCv?'<b>'+t('keyT')+'</b><div class="keybox" style="margin-top:6px"><canvas id="keyView"></canvas></div>':'';
   side.innerHTML=h;
-  var bc=$('bigsym').getContext('2d'); bc.fillStyle='#fff'; bc.fillRect(0,0,112,112); var r=k.rep; bc.drawImage($('cv'),r.x0,r.y0,r.x1-r.x0,r.y1-r.y0,0,0,112,112);
+  var bc=$('bigsym').getContext('2d'); bc.fillStyle='#fff'; bc.fillRect(0,0,112,112); var r=k.rep; bc.drawImage(cv,r.x0,r.y0,r.x1-r.x0,r.y1-r.y0,0,0,112,112);
+  if(keyCv){ var kv=$('keyView'); kv.width=keyCv.width; kv.height=keyCv.height; var kx=kv.getContext('2d'); kx.drawImage(keyCv,0,0);
+    if(km){ kx.strokeStyle='#e0245e'; kx.lineWidth=Math.max(3,keyCv.width/200); kx.strokeRect(km.L.x0-3,km.L.y0-3,km.L.end-km.L.x0+8,km.L.y1-km.L.y0+6);
+      var lv=$('lineView'), pad=4, lw=km.L.end-km.L.x0+2*pad, lh=km.L.y1-km.L.y0+2*pad; lv.width=lw; lv.height=lh; lv.getContext('2d').drawImage(keyCv,km.L.x0-pad,km.L.y0-pad,lw,lh,0,0,lw,lh); } }
+}
+function prevHTML(k){
+  var b=boxes[k]; if(!b||(k==='key'&&keySrc&&false)) return '';
+  return '<div class="msg" style="display:grid;gap:8px"><b>'+t(k==='chart'?'toolChart':'toolKey')+'</b><div class="keybox" style="max-height:150px"><canvas data-prev="'+k+'"></canvas></div><div class="row"><button class="btn sec" data-rot="'+k+':-1" style="padding:6px 12px;font-size:14px">'+t('rotL')+'</button><button class="btn sec" data-rot="'+k+':1" style="padding:6px 12px;font-size:14px">'+t('rotR')+'</button></div><span class="muted" style="font-size:13px">'+t('prevHint')+'</span></div>';
+}
+function drawPrevs(){
+  ['chart','key'].forEach(function(k){ var b=boxes[k], cv=document.querySelector('canvas[data-prev="'+k+'"]'); if(!b||!cv) return;
+    var c=regionOf(k==='key'&&keySrc?keySrc:src,b); cv.width=c.width; cv.height=c.height; cv.getContext('2d').drawImage(c,0,0); });
+}
+function matchKey(k){
+  if(!keyInfo||!keyInfo.lines.length) return null; var best=null;
+  keyInfo.lines.forEach(function(L){ var d=Reader.dist(k.v,L.fp); if(!best||d<best.d) best={d:d,L:L}; });
+  return best&&best.d<0.5?best:null;
 }
 $('side').addEventListener('click',function(e){
-  var b=e.target.closest('button'); if(!b||!last||!last.ok) return; var q=ask(), k=q[idx];
+  var b=e.target.closest('button'); if(!b) return;
+  if(mode==='mark'){
+    if(b.dataset.tool){ tool=b.dataset.tool; render(); }
+    else if(b.dataset.rot){ var pr=b.dataset.rot.split(':'); var bx=boxes[pr[0]]; if(bx){ bx.rot=((bx.rot||0)+(+pr[1])+4)%4; if(pr[0]==='chart'&&boxes.key&&!keySrc) boxes.key.rot=bx.rot; } render(); }
+    else if(b.dataset.nokey){ noKey=true; boxes.key=null; keySrc=null; tool='chart'; render(); }
+    else if(b.dataset.read){ readNow(false); }
+    else if(b.dataset.whole){ boxes.chart=null; readNow(false); }
+    return; }
+  if(!last||!last.ok) return; var q=ask(), k=q[idx];
   if(b.dataset.yes){ labels[k.id]=b.dataset.yes; advance(q); }
   else if(b.dataset.no){ labels['_pick'+k.id]=1; render(); }
   else if(b.dataset.set){ labels[k.id]=b.dataset.set; advance(q); }
@@ -240,10 +346,10 @@ function advance(q){ if(idx<q.length-1){ idx++; render(); } else finish(); }
 function finish(){ finished=true; render(); }
 
 function counts(rows){
-  var io=rows.map(function(r){ var a=0,b=0; r.forEach(function(q){ var p=IO[labels[q.cl]]||[1,1]; a+=p[0]; b+=p[1]; }); return [a,b]; }); return io;
+  return rows.map(function(r){ var a=0,b=0; r.forEach(function(q){ var p=IO[labels[q.cl]]||[1,1]; a+=p[0]; b+=p[1]; }); return [a,b]; });
 }
 function doneView(rows){
-  paintOverlay(); var io=counts(rows), bad=[], unk=0;
+  paintCells(); var io=counts(rows), bad=[], unk=0;
   io.forEach(function(p,i){ if(i>0&&Math.abs(p[0]-io[i-1][1])>0.01) bad.push(i); });
   last.clusters.forEach(function(k){ if(labels[k.id]==='unknown'||labels[k.id]==='cable') unk+=1; });
   var tab='<table><tbody>'+io.map(function(p,i){return '<tr><td>'+t('chkPer',{r:i+1,a:+p[0].toFixed(1),b:+p[1].toFixed(1)})+'</td></tr>';}).join('')+'</tbody></table>';
@@ -262,16 +368,15 @@ function go(){
   location.href='/?pattern=upload';
 }
 
-/* drag-to-crop */
+/* drag-to-mark (mark mode only) */
 (function(){ var ov=$('ov'), a=null;
   function pt(e){ var r=ov.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*ov.width,y:(e.clientY-r.top)/r.height*ov.height}; }
-  ov.addEventListener('pointerdown',function(e){ a=pt(e); ov.setPointerCapture(e.pointerId); });
-  ov.addEventListener('pointermove',function(e){ if(!a) return; var b=pt(e), c=ov.getContext('2d'); c.clearRect(0,0,ov.width,ov.height);
-    c.strokeStyle='#e0245e'; c.lineWidth=3; c.setLineDash([8,5]); c.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y); c.setLineDash([]); });
-  ov.addEventListener('pointerup',function(e){ if(!a) return; var b=pt(e), x0=Math.min(a.x,b.x), y0=Math.min(a.y,b.y), w=Math.abs(b.x-a.x), h=Math.abs(b.y-a.y); a=null;
-    if(w<40||h<40){ if(last) render(); return; }
-    var base=crop||{x:0,y:0,w:src.width,h:src.height}, f=base.w/ov.width;
-    crop={x:Math.round(base.x+x0*f),y:Math.round(base.y+y0*f),w:Math.round(w*f),h:Math.round(h*f)}; labels={}; idx=0; finished=false; analyse(); });
+  function box(a,b){ return {x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(b.x-a.x),h:Math.abs(b.y-a.y)}; }
+  ov.addEventListener('pointerdown',function(e){ if(mode!=='mark') return; a=pt(e); ov.setPointerCapture(e.pointerId); });
+  ov.addEventListener('pointermove',function(e){ if(!a) return; paintBoxes(box(a,pt(e))); });
+  ov.addEventListener('pointerup',function(e){ if(!a) return; var b=box(a,pt(e)); a=null;
+    if(b.w<30||b.h<30){ paintBoxes(); return; }
+    b.rot=(tool==='key'&&boxes.chart)?boxes.chart.rot:0; boxes[tool]=b; if(tool==='key') keySrc=null; if(tool==='chart'&&!boxes.key&&!noKey) tool='key'; failReason=null; render(); });
 })();
 statics();
 window.__readerDebug=function(){return {last:last,labels:labels};};
