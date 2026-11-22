@@ -1,5 +1,5 @@
 const {chromium}=require('playwright');const http=require('http'),fs=require('fs');
-const srv=http.createServer((q,r)=>{let f='/home/claude/knit-explainer/public'+(q.url.split('?')[0]==='/'?'/index.html':q.url.split('?')[0]);
+const srv=http.createServer((q,r)=>{let f=require('path').join(__dirname,'../../public')+(q.url.split('?')[0]==='/'?'/index.html':q.url.split('?')[0]);
  try{const d=fs.readFileSync(f);r.setHeader('content-type',f.endsWith('.js')?'text/javascript':'text/html');r.end(d);}catch(e){r.statusCode=404;r.end();}}).listen(8801);
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1000,height:900}});
 await p.route(/fonts\./,r=>r.abort());await p.goto('http://localhost:8801/reader.html');

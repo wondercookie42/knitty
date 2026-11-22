@@ -111,7 +111,7 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  toolKey:'2. Symbol key (optional)',marked:'✓ marked',notYet:'not yet',
  keyOther:'The symbol key is on another picture',keyNone:'There is no symbol key; I\'ll choose meanings myself',keySkip:'No symbol key: skipped',keyAdded:'Symbol key picture added',
  readBtn:'Read my chart →',whole:'My whole picture is just the chart',
- rotL:'↺ 90°',rotR:'90° ↻',fineT:'Fine tilt',straighten:'Straighten automatically',rotHint:'The photo is tilted? Use the slider or the ±1° buttons for a slow turn. Sideways? Use the 90° buttons. If only the chart is sideways, mark it first, then rotate just the chart.',
+ rotL:'↺ 90°',rotR:'90° ↻',delBox:'🗑 Delete this box',fineT:'Fine tilt',straighten:'Straighten automatically',rotHint:'The photo is tilted? Use the slider or the ±1° buttons for a slow turn. Sideways? Use the 90° buttons. If only the chart is sideways, mark it first, then rotate just the chart.',
  markAgain:'Mark again',
  keyT:'Your symbol key',keyFound:'In your symbol key, this symbol is on this line:',keyNo:'I couldn\'t match this symbol to a line of your symbol key. Look through it yourself and find it.',keyLook:'Find this symbol in your symbol key and read what it says.',
  
@@ -144,7 +144,7 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  toolKey:'2. Условные обозначения (необязательно)',marked:'✓ отмечено',notYet:'ещё нет',
  keyOther:'Условные обозначения на другой картинке',keyNone:'Условных обозначений нет, значения выберу сам',keySkip:'Без условных обозначений',keyAdded:'Картинка с условными обозначениями добавлена',
  readBtn:'Прочитать схему →',whole:'Вся картинка — это только схема',
- rotL:'↺ 90°',rotR:'90° ↻',fineT:'Точный наклон',straighten:'Выровнять автоматически',rotHint:'Фото наклонено? Крутите ползунок или кнопки ±1° — поворот плавный. Лежит боком? Кнопки 90°. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
+ rotL:'↺ 90°',rotR:'90° ↻',delBox:'🗑 Удалить рамку',fineT:'Точный наклон',straighten:'Выровнять автоматически',rotHint:'Фото наклонено? Крутите ползунок или кнопки ±1° — поворот плавный. Лежит боком? Кнопки 90°. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
  markAgain:'Разметить заново',
  keyT:'Ваши условные обозначения',keyFound:'В ваших условных обозначениях этот символ на такой строке:',keyNo:'Не удалось найти этот символ в строках условных обозначений. Найдите его там сами.',keyLook:'Найдите этот символ в условных обозначениях и прочитайте, что там написано.',
  
@@ -327,8 +327,9 @@ function render(){
 }
 function prevHTML(k){
   var b=boxes[k]; if(!b||(k==='key'&&keySrc&&false)) return '';
-  return '<div class="msg" style="display:grid;gap:8px"><b>'+t(TN[k])+'</b><div class="keybox" style="max-height:150px"><canvas data-prev="'+k+'"></canvas></div><div class="row"><button class="btn sec" data-rot="'+k+':-90" style="padding:6px 12px;font-size:14px">'+t('rotL')+'</button><button class="btn sec" data-rot="'+k+':90" style="padding:6px 12px;font-size:14px">'+t('rotR')+'</button></div><div class="fine"><button class="btn sec" data-rot="'+k+':-1" style="padding:6px 10px;font-size:14px">−1°</button><input type="range" data-fine="'+k+'" min="-45" max="45" step="0.5" value="'+fineOf(b.rot||0)+'" aria-label="'+t('fineT')+'"><button class="btn sec" data-rot="'+k+':1" style="padding:6px 10px;font-size:14px">+1°</button><output data-fv="'+k+'">'+fmt(fineOf(b.rot||0))+'</output></div><span class="muted" style="font-size:13px">'+t('prevHint')+'</span></div>';
+  return '<div class="msg" style="display:grid;gap:8px"><b>'+t(TN[k])+'</b><div class="keybox" style="max-height:150px"><canvas data-prev="'+k+'"></canvas></div><div class="row"><button class="btn sec" data-rot="'+k+':-90" style="padding:6px 12px;font-size:14px">'+t('rotL')+'</button><button class="btn sec" data-rot="'+k+':90" style="padding:6px 12px;font-size:14px">'+t('rotR')+'</button><button class="btn sec" data-del="'+k+'" style="padding:6px 12px;font-size:14px">'+t('delBox')+'</button></div><div class="fine"><button class="btn sec" data-rot="'+k+':-1" style="padding:6px 10px;font-size:14px">−1°</button><input type="range" data-fine="'+k+'" min="-45" max="45" step="0.5" value="'+fineOf(b.rot||0)+'" aria-label="'+t('fineT')+'"><button class="btn sec" data-rot="'+k+':1" style="padding:6px 10px;font-size:14px">+1°</button><output data-fv="'+k+'">'+fmt(fineOf(b.rot||0))+'</output></div><span class="muted" style="font-size:13px">'+t('prevHint')+'</span></div>';
 }
+function delBox(k){ if(!boxes[k]) return; boxes[k]=null; if(k==='key') keySrc=null; tool=k; failReason=null; render(); }
 function addRot(k,d){ var bx=boxes[k]; if(!bx) return; bx.rot=norm((bx.rot||0)+d);
   if(k==='chart'){ if(boxes.key&&!keySrc) boxes.key.rot=norm((boxes.key.rot||0)+d); if(boxes.text) boxes.text.rot=norm((boxes.text.rot||0)+d); } }
 document.addEventListener('input',function(e){ var k=e.target.getAttribute&&e.target.getAttribute('data-fine'); if(!k||mode!=='mark') return; var bx=boxes[k]; if(!bx) return;
@@ -362,6 +363,7 @@ $('side').addEventListener('click',function(e){
   if(mode==='mark'){
     if(b.dataset.tool){ tool=b.dataset.tool; render(); }
     else if(b.dataset.rot){ var pr=b.dataset.rot.split(':'); var bx=boxes[pr[0]]; if(bx){ addRot(pr[0],+pr[1]); } render(); }
+    else if(b.dataset.del){ delBox(b.dataset.del); }
     else if(b.dataset.nokey){ noKey=true; boxes.key=null; keySrc=null; tool='chart'; render(); }
     else if(b.dataset.read){ readNow(false); }
     else if(b.dataset.whole){ boxes.chart=null; readNow(false); }
