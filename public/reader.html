@@ -130,7 +130,7 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  q:'What does this symbol mean?',looks:'It looks like: {x}. Right?',yes:'Yes, that\'s it',no:'No, pick another',idk:'I\'m not sure',idkS:'I\'ll mark it and we\'ll check later',
  back1:'Back',next:'Next',another:'Choose another picture',
  doneT:'Chart unlocked!',almost:'Almost there',doneOk:'All {n} rounds add up. Your chart makes sense, and I can explain every stitch.',
- doneBad:'Round {r} doesn\'t add up: it uses {a} stitches but the round below makes {b}. One symbol may have the wrong answer. Go back and check.',
+ doneBad:'Round {r} doesn\'t add up: it uses {a} stitches but the round below makes {b}. One symbol may have the wrong answer. Go back and check. If the chart is triangular or shaped, this can be normal, and you can still continue.',
  doneUnk:'{n} symbol(s) are marked "not sure". I can\'t explain those yet.',
  start:'Start learning →',review:'Check my answers',tbl:'Show per-round counts',chkPer:'Round {r}: uses {a}, makes {b}',
  L:{knit:['knit','the most common stitch'],purl:['purl','a little bump on the front'],yo:['yarn over','a deliberate hole'],k2tog:['knit 2 together','two stitches become one'],skp:['slip, knit, pass over','two become one, leaning left'],inc3:['one into three','one stitch grows into three'],blank:['empty square','means knit on the front'],nostitch:['no stitch','a filler, skip it'],unknown:['I\'m not sure',''],cable:['cable or crossing','I can\'t explain these yet']}},
@@ -163,7 +163,7 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  q:'Что означает этот символ?',looks:'Похоже на: {x}. Верно?',yes:'Да, верно',no:'Нет, выбрать другое',idk:'Не знаю',idkS:'Отмечу, проверим позже',
  back1:'Назад',next:'Дальше',another:'Выбрать другую картинку',
  doneT:'Схема открыта!',almost:'Почти готово',doneOk:'Все {n} кругов сходятся. Схема понятна, и я могу объяснить каждую петлю.',
- doneBad:'Круг {r} не сходится: берёт {a} петель, а предыдущий создаёт {b}. Возможно, один символ угадан неверно. Вернитесь и проверьте.',
+ doneBad:'Круг {r} не сходится: берёт {a} петель, а предыдущий создаёт {b}. Возможно, один символ угадан неверно. Вернитесь и проверьте. Если схема треугольная или с вырезами, это может быть нормально: можно продолжить.',
  doneUnk:'Символов с пометкой «не знаю»: {n}. Их пока объяснить не получится.',
  start:'Начать учиться →',review:'Проверить ответы',tbl:'Показать числа по кругам',chkPer:'Круг {r}: берёт {a}, создаёт {b}',
  L:{knit:['лицевая','самая частая петля'],purl:['изнаночная','маленький бугорок спереди'],yo:['накид','намеренная дырочка'],k2tog:['две вместе лицевой','две петли в одну'],skp:['снять, провязать, протянуть','две в одну, наклон влево'],inc3:['одна в три','из одной петли три'],blank:['пустая клетка','на лицевой стороне это лицевая'],nostitch:['нет петли','заполнитель, пропустить'],unknown:['не знаю',''],cable:['коса или перекрест','пока не умею объяснять']}}
@@ -224,7 +224,7 @@ function variants(c,maxSide){
   return list;
 }
 function prep(c,maxSide){
-  var s=Math.min(maxSide==null?3:maxSide,1600/Math.max(c.width,c.height)), o=document.createElement('canvas'); o.width=Math.max(1,Math.round(c.width*s)); o.height=Math.max(1,Math.round(c.height*s));
+  var s=Math.min(maxSide==null?8:maxSide,1600/Math.max(c.width,c.height)), o=document.createElement('canvas'); o.width=Math.max(1,Math.round(c.width*s)); o.height=Math.max(1,Math.round(c.height*s));
   var x=o.getContext('2d'); x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high'; x.fillStyle='#fff'; x.fillRect(0,0,o.width,o.height); x.drawImage(c,0,0,o.width,o.height); return o;
 }
 function setWhole(a){ a=norm(a); if(a===srcAng) return; srcAng=a; src=a?rotated(srcOrig,a):srcOrig; boxes.chart=null; if(!keySrc) boxes.key=null; boxes.text=null; syncWhole(); render(); }
@@ -388,9 +388,9 @@ function doneView(rows){
   last.clusters.forEach(function(k){ if(labels[k.id]==='unknown'||labels[k.id]==='cable') unk+=1; });
   var tab='<table><tbody>'+io.map(function(p,i){return '<tr><td>'+t('chkPer',{r:i+1,a:+p[0].toFixed(1),b:+p[1].toFixed(1)})+'</td></tr>';}).join('')+'</tbody></table>';
   var h='<div class="card pop" style="display:grid;gap:12px"><h2>'+(bad.length?'🧶 '+t('almost'):'🎉 '+t('doneT'))+'</h2>'+
-    (bad.length?'<div class="msg bad">'+t('doneBad',{r:bad[0]+1,a:io[bad[0]][0],b:io[bad[0]-1][1]})+'</div>':'<div class="msg"><b>✓</b> '+t('doneOk',{n:rows.length})+'</div>')+
+    (bad.length?'<div class="msg bad">'+t('doneBad',{r:bad[0]+1,a:+io[bad[0]][0].toFixed(1),b:+io[bad[0]-1][1].toFixed(1)})+'</div>':'<div class="msg"><b>✓</b> '+t('doneOk',{n:rows.length})+'</div>')+
     (unk?'<div class="msg">'+t('doneUnk',{n:unk})+'</div>':'')+
-    '<div class="row"><button class="btn" data-go="1"'+(bad.length?' disabled style="opacity:.5"':'')+'>'+t('start')+'</button><button class="btn sec" data-review="1">'+t('review')+'</button></div>'+
+    '<div class="row"><button class="btn" data-go="1"'+'>'+t('start')+'</button><button class="btn sec" data-review="1">'+t('review')+'</button></div>'+
     '<details><summary class="muted">'+t('tbl')+'</summary><div style="overflow-x:auto">'+tab+'</div></details></div>';
   $('side').innerHTML=h;
 }
@@ -413,7 +413,7 @@ function go(){
     b.rot=(tool!=='chart'&&boxes.chart)?boxes.chart.rot:0; boxes[tool]=b; if(tool==='key') keySrc=null; if(tool==='chart'&&!boxes.key&&!noKey) tool='key'; failReason=null; render(); });
 })();
 statics();
-window.__readerDebug=function(){return {last:last,labels:labels,failReason:failReason,region:function(){return prep(regionOf(src,boxes.chart),3);}};};
+window.__readerDebug=function(){return {last:last,labels:labels,failReason:failReason,region:function(){return prep(regionOf(src,boxes.chart));}};};
 })();
 </script>
 </body>

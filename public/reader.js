@@ -22,14 +22,14 @@ function contrast(g){
   c=0; for(i=0;i<256;i++){ c+=hist[i]; if(c>=b){hi=i;break;} }
   return hi-lo;
 }
-function binarize(g,w,h){
-  var r=Math.max(6,Math.round(Math.min(w,h)/60)), W=w+1, I=new Float64Array(W*(h+1)), x,y;
+function binarize(g,w,h,kf){ kf=kf||0.86;
+  var r=Math.max(10,Math.round(Math.min(w,h)/30)), W=w+1, I=new Float64Array(W*(h+1)), x,y;
   for(y=0;y<h;y++){ var row=0; for(x=0;x<w;x++){ row+=g[y*w+x]; I[(y+1)*W+x+1]=I[y*W+x+1]+row; } }
   var ink=new Uint8Array(w*h);
   for(y=0;y<h;y++){ var y0=Math.max(0,y-r),y1=Math.min(h,y+r+1);
     for(x=0;x<w;x++){ var x0=Math.max(0,x-r),x1=Math.min(w,x+r+1);
       var sum=I[y1*W+x1]-I[y0*W+x1]-I[y1*W+x0]+I[y0*W+x0], mean=sum/((x1-x0)*(y1-y0));
-      var v=g[y*w+x]; ink[y*w+x]=(v<mean*0.86-3||v<70)?1:0; } }
+      var v=g[y*w+x]; ink[y*w+x]=(v<mean*kf-3||v<70)?1:0; } }
   return ink;
 }
 function lineScores(ink,w,h,L){
@@ -52,8 +52,8 @@ function ls(pts){ // pts [k,p] -> {a,m}
   var den=n*skk-sk*sk; if(Math.abs(den)<1e-9) return null;
   var m=(n*skp-sk*sp)/den; return {a:(sp-m*sk)/n,m:m};
 }
-function fitLattice(objs){
-  if(objs.length<5) return [];
+function fitLattice(objs,lenient){
+  if(objs.length<(lenient?4:5)) return [];
   var pos=objs.map(function(o){return o.p;}), wt=objs.map(function(o){return o.w;}), i;
   var gaps=[]; for(i=0;i<pos.length-1;i++) gaps.push(pos[i+1]-pos[i]);
   var cands=gaps.filter(function(g){return g>=8;}), found=[];
@@ -61,9 +61,9 @@ function fitLattice(objs){
     var a=anchor,m=m0,pts=[],it,k,p,wsum=0;
     for(it=0;it<4;it++){ pts=[]; wsum=0;
       for(i=0;i<pos.length;i++){ p=pos[i]; k=Math.round((p-a)/m); if(Math.abs(p-(a+k*m))<0.16*m){ pts.push([k,p]); wsum+=wt[i]; } }
-      if(pts.length<4) return; var f=ls(pts); if(!f||f.m<8) return; a=f.a; m=f.m; }
+      if(pts.length<(lenient?3:4)) return; var f=ls(pts); if(!f||f.m<8) return; a=f.a; m=f.m; }
     var ks=pts.map(function(q){return q[0];}), span=Math.max.apply(null,ks)-Math.min.apply(null,ks);
-    if(pts.length>=5&&span>=4) found.push({a:a,m:m,n:pts.length,sc:wsum}); }); });
+    if(pts.length>=(lenient?4:5)&&span>=(lenient?3:4)) found.push({a:a,m:m,n:pts.length,sc:wsum}); }); });
   found.sort(function(x,y){return y.sc-x.sc;});
   var out=[]; found.forEach(function(f){ if(!out.some(function(o){return Math.abs(o.m-f.m)<0.06*f.m&&Math.abs(((o.a-f.a)/f.m)%1)<0.1||Math.abs(((o.a-f.a)/f.m)%1)>0.9&&Math.abs(o.m-f.m)<0.06*f.m;})) out.push(f); });
   return out.slice(0,8);
@@ -89,7 +89,16 @@ function bandCov(ink,w,h,fixed,a,b,horiz,band){
   return tot?hit/tot:0;
 }
 /* look a few pixels either side of the expected line for where the printed line really is (thin band, best coverage) */
-function bestEdge(ink,w,h,fixed,a,b,horiz,sr){ var best={c:-1,p:fixed},d,cv; for(d=-sr;d<=sr;d++){ cv=bandCov(ink,w,h,fixed+d,a,b,horiz,1); if(cv>best.c+0.02||(Math.abs(cv-best.c)<=0.02&&Math.abs(d)<Math.abs(best.p-fixed))) best={c:cv,p:fixed+d}; } return best; }
+function bestEdge(ink,w,h,fixed,a,b,horiz,sr){
+  var best={c:-1,p:fixed},d1,d2,t,n=Math.max(1,Math.round(b-a)),len=(horiz?w:h);
+  for(d1=-sr;d1<=sr;d1++) for(d2=-sr;d2<=sr;d2++){ if(Math.abs(d2-d1)>4) continue;
+    var hit=0,tot=0;
+    for(t=Math.max(0,Math.round(a));t<=Math.min(len-1,Math.round(b));t++){ var u=(t-a)/n, off=Math.round(fixed+d1+(d2-d1)*u), ok=0, q;
+      for(q=-1;q<=1;q++){ var xx=horiz?t:off+q, yy=horiz?off+q:t; if(xx>=0&&yy>=0&&xx<w&&yy<h&&ink[yy*w+xx]){ ok=1; break; } }
+      hit+=ok; tot++; }
+    var cv=tot?hit/tot:0, p=fixed+(d1+d2)/2;
+    if(cv>best.c+0.02||(Math.abs(cv-best.c)<=0.02&&Math.abs(p-fixed)<Math.abs(best.p-fixed))) best={c:cv,p:p}; }
+  return best; }
 function fingerprint(ink,w,x0,y0,x1,y1){
   var ins=0.15*(x1-x0), ax=x0+ins, bx=x1-ins, ay=y0+ins, by=y1-ins, v=new Float32Array(N*N), c=new Float32Array(N*N);
   for(var y=Math.ceil(ay);y<by;y++) for(var x=Math.ceil(ax);x<bx;x++){
@@ -157,12 +166,14 @@ function largestBlock(cells){
 /* follow the real printed lines where the photo is slightly curved or tilted: pull each lattice line to the nearest detected line (within 20% of a cell) */
 function snapTo(pos,peaksList,m){ var out=pos.map(function(p){ var best=null; peaksList.forEach(function(q){ var d=Math.abs(q.p-p); if(d<0.2*m&&(!best||d<best.d)) best={d:d,p:q.p}; }); return best?best.p:p; });
   for(var i=1;i<out.length;i++) if(out[i]-out[i-1]<0.6*m) out[i]=out[i-1]+m; return out; }
-function analyzeCore(g,w,h,lenient){
+/* keep only the lattice between the first and last real printed line, so margins and captions are not counted as squares */
+function trimTo(pos,peaksList,m){ var lo=-1,hi=-1; pos.forEach(function(p,i){ if(peaksList.some(function(q){return Math.abs(q.p-p)<0.2*m;})){ if(lo<0) lo=i; hi=i; } }); return lo<0||hi-lo<2?pos:pos.slice(lo,hi+1); }
+function analyzeCore(g,w,h,lenient,kf){
   var res={w:w,h:h,metrics:{}}, mn=Math.min(w,h);
   if(mn<200) return fail('tooSmall');
   var sharp=sharpness(g,w,h), con=contrast(g); res.metrics={sharp:sharp,contrast:con};
   if(con<45) return fail('lowContrast');
-  var ink=binarize(g,w,h), L=Math.max(18,Math.round(0.03*mn)), sc=lineScores(ink,w,h,L);
+  var ink=binarize(g,w,h,kf), L=Math.max(18,Math.round(0.03*mn)), sc=lineScores(ink,w,h,L);
   var py=peaks(sc.hs,0.25,L*3), px=peaks(sc.vs,0.25,L*3);
   function withDouble(list){ var o=list.slice(); list.forEach(function(f){ o.push({a:f.a,m:f.m*2,n:f.n/2,sc:f.sc*0.9}); o.push({a:f.a+f.m,m:f.m*2,n:f.n/2,sc:f.sc*0.9}); }); return o; }
   // a lattice whose half-way positions also carry grid lines is too coarse (each "cell" would hold 2x2 real squares): use half the pitch
@@ -171,18 +182,19 @@ function analyzeCore(g,w,h,lenient){
       for(k=0;;k++){ var p=f.a+k*f.m; if(p>=arr.length-3) break; if(p>=3){ main+=at(arr,p); mid+=at(arr,p+f.m/2); n++; } }
       for(k=-1;;k--){ var p2=f.a+k*f.m; if(p2<3) break; main+=at(arr,p2); mid+=at(arr,p2+f.m/2); n++; }
       if(n>=3&&main>0&&mid/main>0.8&&f.m/2>=8){ return {a:f.a,m:f.m/2,n:f.n*2,sc:f.sc,half:true}; } return f; }); }
-  var cy=fixHalf(withDouble(fitLattice(py)),sc.hs), cx=fixHalf(withDouble(fitLattice(px)),sc.vs);
-  res.metrics.hLines=py.length; res.metrics.vLines=px.length;
+  var cy=fixHalf(withDouble(fitLattice(py,lenient)),sc.hs), cx=fixHalf(withDouble(fitLattice(px,lenient)),sc.vs);
+  res.metrics.hLines=py.length; res.metrics.vLines=px.length; res.metrics.hP=py.map(function(q){return Math.round(q.p);}); res.metrics.vP=px.map(function(q){return Math.round(q.p);});
   if(!cx.length||!cy.length) return fail(sharp<25?'blurry':(py.length+px.length<4?'noGrid':'irregular'));
   var mxx=Math.max.apply(null,cx.map(function(f){return f.sc;})), myy=Math.max.apply(null,cy.map(function(f){return f.sc;})), pairs=[];
   cx.forEach(function(x){ cy.forEach(function(y){ var asp=Math.abs(Math.log(x.m/y.m)); if(asp>0.3) return; pairs.push({fx:x,fy:y,sc:x.sc/mxx+y.sc/myy-4*Math.max(0,asp-0.12)}); }); });
   pairs.sort(function(a,b){return b.sc-a.sc;});
   if(!pairs.length) return fail('irregular');
-  var cells=null, fx=null, fy=null, xs, ys, why='irregular', pi;
+  var cells=null, fx=null, fy=null, xs, ys, why='irregular', pi, bestC=null;
   for(pi=0;pi<Math.min(10,pairs.length);pi++){
     fx=pairs[pi].fx; fy=pairs[pi].fy;
     xs=latticePositions(fx,w); ys=latticePositions(fy,h);
     xs=snapTo(xs,px,fx.m); ys=snapTo(ys,py,fy.m);
+    xs=trimTo(xs,px,fx.m); ys=trimTo(ys,py,fy.m);
     if(xs.length>120||ys.length>160){ continue; }
     var cs=[],r,c,band=Math.max(2,Math.round(0.28*Math.min(fx.m,fy.m)));
     for(r=0;r<ys.length-1;r++) for(c=0;c<xs.length-1;c++){
@@ -197,15 +209,18 @@ function analyzeCore(g,w,h,lenient){
     cs=largestBlock(cs);
     if(cs.length<(lenient?12:24)){ why='noGrid'; continue; }
     var s4=cs.filter(function(q){return q.s>=4;}).length/cs.length;
+    (res.metrics.tries=res.metrics.tries||[]).push([Math.round(fx.m),Math.round(fy.m),cs.length,Math.round(s4*100)/100]);
     if(s4<(lenient?0.3:0.5)){ why='irregular'; continue; }
-    cells=cs; res.metrics.s4=Math.round(s4*100)/100; res.metrics.cw=Math.round(fx.m*10)/10; res.metrics.ch=Math.round(fy.m*10)/10; break;
+    var latN=Math.max(1,(xs.length-1)*(ys.length-1)), cand={cs:cs,s4:s4,fx:fx,fy:fy,xs:xs,ys:ys,score:cs.length*s4*Math.min(1,cs.length/latN/0.5)};
+    if(!bestC||cand.score>bestC.score) bestC=cand;
   }
+  if(bestC){ cells=bestC.cs; fx=bestC.fx; fy=bestC.fy; xs=bestC.xs; ys=bestC.ys; res.metrics.s4=Math.round(bestC.s4*100)/100; res.metrics.cw=Math.round(fx.m*10)/10; res.metrics.ch=Math.round(fy.m*10)/10; }
   if(!cells) return fail(why);
   res.grid={xs:xs,ys:ys,cw:fx.m,ch:fy.m}; res.cells=cells;
   var sym=cells.filter(function(q){return q.kind==='sym';}).length;
   if(sym<3) return fail('noSymbols');
   if(sharp<25) res.warn='blurry';
-  var lat=Math.max(1,(xs.length-1)*(ys.length-1)); res.metrics.cov=Math.round(cells.length/lat*100)/100; if(res.metrics.cov<0.2&&!lenient) return fail('irregular'); if(res.metrics.cov<0.6) res.partial=true;
+  var lat=Math.max(1,(xs.length-1)*(ys.length-1)); res.metrics.cov=Math.round(cells.length/lat*100)/100; res.metrics.area=Math.round((xs[xs.length-1]-xs[0])*(ys[ys.length-1]-ys[0])/(w*h)*100)/100; if(!lenient&&(res.metrics.cov<0.4||res.metrics.area<0.3)) return fail('irregular'); if(res.metrics.cov<0.6) res.partial=true;
   // clusters
   var filled=cells.filter(function(q){return q.kind==='filled';}).length;
   if(filled>0.5*cells.length) return fail('photo');
@@ -228,7 +243,7 @@ function analyzeCore(g,w,h,lenient){
   cls.sort(function(a,b){return b.cells.length-a.cells.length;});
   cls.forEach(function(k){ k.sug=suggest(k); });
   var symGroups=cls.filter(function(k){return k.kind==='sym';}).length;
-  res.metrics.groups=symGroups; if(symGroups>(lenient?30:20)) return fail('photo');
+  res.metrics.groups=symGroups; if(symGroups>(lenient?40:20)) return fail('photo');
   res.clusters=cls; res.ok=true; return res;
   function fail(reason){ res.ok=false; res.reason=reason; return res; }
 }
@@ -275,6 +290,9 @@ function legendLines(g,w,h){
 function analyze(g,w,h,lenient){
   var res=analyzeCore(g,w,h,lenient);
   if(res.ok||['noGrid','irregular','blurry','noSymbols'].indexOf(res.reason)<0) return res;
+  // faint printing (grey lines on grey paper): look for fainter lines too
+  var kk=lenient?[0.92,0.96]:[];
+  for(var q=0;q<kk.length;q++){ var r2=analyzeCore(g,w,h,lenient,kk[q]); if(r2.ok){ r2.sens=kk[q]; return r2; } }
   var tries=[[0,.16,0,0],[0,0,0,.16],[0,.16,0,.16],[.06,.06,.06,.06],[.12,.12,.12,.12],[.2,.2,.2,.2]], first=res;
   for(var i=0;i<tries.length;i++){
     var f=tries[i], ox=Math.round(f[0]*w), oy=Math.round(f[1]*h), nw=w-ox-Math.round(f[2]*w), nh=h-oy-Math.round(f[3]*h);
