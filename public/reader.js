@@ -316,8 +316,30 @@ function legendLines(g,w,h){
 
 /* symbol key: split into columns, then one entry per text row that starts with a small boxed symbol:
    the symbol's fingerprint (to match chart symbols) and where its text sits (to read the meaning) */
+/* keys drawn as little boxes: erase the box outlines (square: two long horizontal runs and two vertical edges) so only the symbol is left */
+function eraseBoxes(ink,w,h){
+  var runs=[],x,y,rn,minL=Math.max(12,Math.round(0.1*w));
+  for(y=0;y<h;y++){ rn=0; for(x=0;x<=w;x++){ if(x<w&&ink[y*w+x]) rn++; else { if(rn>=minL) runs.push([y,x-rn,x]); rn=0; } } }
+  var done=[];
+  for(var i=0;i<runs.length;i++) for(var j=i+1;j<runs.length;j++){ var a=runs[i],b=runs[j], wd=a[2]-a[1], dy=b[0]-a[0];
+    if(dy<5||Math.abs(a[1]-b[1])>4||Math.abs(a[2]-b[2])>4||dy<0.75*wd||dy>1.3*wd) continue;
+    var ok=0,tot=0; for(var yy=a[0];yy<=b[0];yy++){ tot++; var l=0; for(var xx=a[1]-1;xx<=a[1]+3;xx++) if(ink[yy*w+xx]) l=1; var r=0; for(xx=a[2]-4;xx<=a[2]+1;xx++) if(ink[yy*w+xx]) r=1; if(l&&r) ok++; }
+    if(ok<0.85*tot) continue;
+    for(yy=a[0]-2;yy<=b[0]+2;yy++) for(xx=a[1]-3;xx<=a[2]+3;xx++){ if(yy<0||yy>=h||xx<0||xx>=w) continue; if(yy<=a[0]+2||yy>=b[0]-2||xx<=a[1]+3||xx>=a[2]-3) ink[yy*w+xx]=0; }
+    done.push([a[1],a[0],a[2],b[0]]); }
+  return done;
+}
 function keyEntries(cv){
   var w=cv.width,h=cv.height,g=grayFromCanvas(cv),ink=binarize(g,w,h,0.92),x,y,occ=new Uint8Array(w);
+  var boxes=eraseBoxes(ink,w,h), bo=[];
+  boxes.sort(function(p,q){ return p[1]-q[1]||p[0]-q[0]; }).forEach(function(b){ if(!bo.some(function(c){ return Math.abs(c[0]-b[0])<6&&Math.abs(c[1]-b[1])<6; })) bo.push(b); });
+  if(bo.length>=1){ // boxed key: each box is a symbol, its text sits to the right on the same height
+    var outb=[];
+    bo.forEach(function(b){ var nx=w; bo.forEach(function(c){ if(c[0]>b[2]&&c[1]<b[3]&&c[3]>b[1]&&c[0]<nx) nx=c[0]; });
+      var ts=-1,te=-1,xx,yy; for(xx=b[2]+4;xx<nx-2;xx++){ var any=0; for(yy=b[1];yy<=b[3];yy++) if(ink[yy*w+xx]){ any=1; break; } if(any){ if(ts<0) ts=xx; te=xx; } }
+      if(ts<0) return;
+      outb.push({x0:b[0]+3,x1:b[2]-3,y0:b[1]+3,y1:b[3]-2,tx0:ts,tx1:te,end:te,fp:fingerprint(ink,w,b[0]+3,b[1]+3,b[2]-2,b[3]-2).v}); });
+    if(outb.length) return outb; }
   // drop long rules and page edges (they glue columns and rows together)
   for(y=0;y<h;y++){ var rn=0; for(x=0;x<=w;x++){ if(x<w&&ink[y*w+x]) rn++; else { if(rn>=0.4*w) for(var q=x-rn;q<x;q++) ink[y*w+q]=0; rn=0; } } }
   for(y=0;y<h;y++){ var rs2=0; for(x=0;x<w;x++) rs2+=ink[y*w+x]; if(rs2>0.33*w||y<0.025*h||y>0.975*h) for(x=0;x<w;x++) ink[y*w+x]=0; }
@@ -370,6 +392,28 @@ function analyze(g,w,h,lenient){
   }
   return first;
 }
-window.Reader={keyEntries:keyEntries,cellTop:function(v){var a=[];templates().forEach(function(t){a.push([t.id,Math.round(sdist(v,t.v)*100)/100]);});a.sort(function(x,y){return x[1]-y[1];});return a.slice(0,3);},binarize:binarize,grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist,sdist:sdist};
+/* Clean (digital/PDF/screenshot) pages: the chart is the biggest set of long straight grid lines. Returns {chart,key} boxes or null.
+   Key = everything else with ink below or beside the chart (symbol list). Phone photos of paper have short, tilted lines and return null. */
+function findBoxes(g,w,h){
+  var ink=binarize(g,w,h,0.86), x,y,run,st, hr=new Int32Array(h), hs=new Int32Array(h), he=new Int32Array(h), vr=new Int32Array(w), vs=new Int32Array(w), ve=new Int32Array(w);
+  for(y=0;y<h;y++){ run=0; for(x=0;x<=w;x++){ if(x<w&&ink[y*w+x]){ if(!run) st=x; run++; } else { if(run>hr[y]){ hr[y]=run; hs[y]=st; he[y]=x; } run=0; } } }
+  for(x=0;x<w;x++){ run=0; for(y=0;y<=h;y++){ if(y<h&&ink[y*w+x]){ if(!run) st=y; run++; } else { if(run>vr[x]){ vr[x]=run; vs[x]=st; ve[x]=y; } run=0; } } }
+  var mh=0, mv=0; for(y=0;y<h;y++) if(hr[y]>mh) mh=hr[y]; for(x=0;x<w;x++) if(vr[x]>mv) mv=vr[x];
+  if(mh<0.15*Math.min(w,h)||mv<0.15*Math.min(w,h)) return null;
+  var x0=1e9,x1=-1,y0=1e9,y1=-1,nh=0,nv=0,prev=-9;
+  for(y=0;y<h;y++) if(hr[y]>=0.6*mh){ x0=Math.min(x0,hs[y]); x1=Math.max(x1,he[y]); if(y-prev>2) nh++; prev=y; }
+  prev=-9; for(x=0;x<w;x++) if(vr[x]>=0.6*mv){ y0=Math.min(y0,vs[x]); y1=Math.max(y1,ve[x]); if(x-prev>2) nv++; prev=x; }
+  if(nh<3||nv<3) return null;
+  var pad=3; x0=Math.max(0,x0-pad); y0=Math.max(0,y0-pad); x1=Math.min(w,x1+pad); y1=Math.min(h,y1+pad);
+  var chart={x:x0,y:y0,w:x1-x0,h:y1-y0};
+  // key: ink outside the chart, below (preferred) or to the right; skip the row/column numbers hugging the chart
+  function bbox(ax0,ay0,ax1,ay1){ var a=1e9,b=1e9,c=-1,d=-1; for(var j=ay0;j<ay1;j++) for(var i=ax0;i<ax1;i++) if(ink[j*w+i]){ if(i<a)a=i; if(i>c)c=i; if(j<b)b=j; if(j>d)d=j; } return c<0?null:{x:a,y:b,w:c-a+1,h:d-b+1}; }
+  var gapY=Math.round((y1-y0)/Math.max(3,nh)*0.9), key=null;
+  var below=bbox(0,Math.min(h,y1+gapY),w,h), right=bbox(Math.min(w,x1+Math.round((x1-x0)/Math.max(3,nv))),0,w,h);
+  key=below&&below.w*below.h>=20*20?below:(right&&right.w*right.h>=20*20?right:null);
+  if(key){ key.x=Math.max(0,key.x-4); key.y=Math.max(0,key.y-4); key.w=Math.min(w-key.x,key.w+8); key.h=Math.min(h-key.y,key.h+8); }
+  return {chart:chart,key:key};
+}
+window.Reader={findBoxes:findBoxes,keyEntries:keyEntries,cellTop:function(v){var a=[];templates().forEach(function(t){a.push([t.id,Math.round(sdist(v,t.v)*100)/100]);});a.sort(function(x,y){return x[1]-y[1];});return a.slice(0,3);},binarize:binarize,grayFromCanvas:grayFromCanvas,analyze:analyze,estimateSkew:estimateSkew,legendLines:legendLines,dist:dist,sdist:sdist};
 
 })();

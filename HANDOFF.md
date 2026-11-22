@@ -48,3 +48,9 @@ term for the legend: «Условные обозначения». Keep `tests/i1
 - `Reader.keyEntries` splits the key into lines (glyph fingerprint + text box); each line is OCR'd in-browser (self-hosted Tesseract, `/vendor/tesseract/`) at 3 scales; `KeyDict.parse` maps text to a stitch label; majority vote.
 - Works well only when the photo is large enough. On the small pink page (577px wide) about 4 of 9 lines parse and some are wrong (e.g. "2 M re zus" read as 3). So the key meaning is a SUGGESTION the user confirms, shown with the key text; auto-prefill needs >=2 agreeing votes.
 - Not done: auto-find chart/key/text on a whole page, cables/multi-cell symbols, library learned in localStorage.
+
+## Clean digital charts (what is actually sold: PDF/screenshot) — added
+- Research: sold patterns (Etsy/Ravelry) are PDFs with digitally drawn charts + key + abbreviations; layout/charts are copyrighted, stitch techniques are not. We cannot ship or download paid samples, so tests use synthetic charts rendered from MIT-licensed `marnen/knitting_symbols` (JIS set; file name = meaning). Generator: `tests/dev/gen-clean-chart.js`.
+- `Reader.findBoxes` auto-finds the chart (largest long-line grid) and the key (ink below/beside) on clean pages; photos of paper return null and fall back to manual boxes.
+- Boxed keys: `eraseBoxes` + box-based entries in `keyEntries`. English names (decrease right/left etc.) added to keydict.
+- Result on synthetic page: chart 66/66 cells, all 5 symbols matched to key text automatically at cell 36px; at 28px knit splits in two groups; at 60px one symbol unmatched. Not yet tested: real sold PDFs, cables, multiple charts per page, PDF input (pdf.js text layer would remove the need for OCR).

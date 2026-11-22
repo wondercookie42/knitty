@@ -240,7 +240,7 @@ $('wNudgeR').addEventListener('click',function(){ setWhole(srcAng+1); });
 $('markAgain').addEventListener('click',function(){ mode='mark'; finished=false; render(); });
 
 /* read the picture: first try the whole thing (clean charts need no marking), else ask the user to mark */
-var ocrWorker=null, ocrLoading=null, keyBusy=false;
+var autoFound=false, ocrWorker=null, ocrLoading=null, keyBusy=false;
 function loadScript(u){ return new Promise(function(ok,no){ var s=document.createElement('script'); s.src=u; s.onload=ok; s.onerror=function(){ no(new Error('load '+u)); }; document.head.appendChild(s); }); }
 function getOcr(){
   if(ocrWorker) return Promise.resolve(ocrWorker);
@@ -275,7 +275,9 @@ function startKeyOcr(){
     .catch(function(e){ keyBusy=false; if(window.console) console.log('ocr failed',e); if(mode==='read') render(); });
 }
 function readNow(firstTry){
-  var cv=$('cv'), reg=regionOf(src,boxes.chart), a=null, res=null;
+  var cv=$('cv'), a=null, res=null;
+  if(firstTry&&!boxes.chart&&!boxes.key){ try{ var ab=Reader.findBoxes(Reader.grayFromCanvas(src),src.width,src.height); if(ab){ boxes.chart=ab.chart; if(ab.key) boxes.key=ab.key; autoFound=true; } }catch(e){} }
+  var reg=regionOf(src,boxes.chart);
   variants(reg,firstTry?1.5:undefined).slice(0,firstTry?1:9).forEach(function(v){
     var rr=Reader.analyze(Reader.grayFromCanvas(v),v.width,v.height,!!boxes.chart);
     var score=rr.ok?rr.cells.length*(rr.metrics.s4||0.5):-1, best=res?(res.ok?res.cells.length*(res.metrics.s4||0.5):-1):-2;

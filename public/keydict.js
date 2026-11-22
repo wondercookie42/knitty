@@ -16,8 +16,8 @@ function fuzzy(hay,needle,maxErr){
 var RULES=[
  ['sk2p',   ['dopp uberz abn','doppelt uberzogen','dopp uberzogen','sk2p','s2kp','sl1 k2tog psso','центральная убавка','снять 1 две вместе протянуть']],
  ['k3tog',  ['3 m re zus','3 m zus','3 re zus','k3tog','три вместе','3 вместе']],
- ['skp',    ['uberz abn','uberzogen zusstr','2 m uberzogen','1 m abh','ssk','skp','снять провязать протянуть','с наклоном влево','2 m re verschr zus','2 re verschr zus']],
- ['k2tog',  ['2 m re zusstr','2 m re zus','2 re zus','2 m zus','2 stitches together','k2tog','две вместе лицевой','2 вместе лицевой','две петли вместе']],
+ ['skp',    ['decrease left','left leaning decrease','left slanting decrease','uberz abn','uberzogen zusstr','2 m uberzogen','1 m abh','ssk','skp','снять провязать протянуть','с наклоном влево','2 m re verschr zus','2 re verschr zus']],
+ ['k2tog',  ['decrease right','right leaning decrease','right slanting decrease','2 m re zusstr','2 m re zus','2 re zus','2 m zus','2 stitches together','k2tog','две вместе лицевой','2 вместе лицевой','две петли вместе']],
  ['ktbl',   ['1 m re verschr','re verschr','k tbl','ktbl','knit through back','лицевая скрещенная','лицевая за заднюю']],
  ['yo',     ['umschlag','1 u','iu','yarn over','yo','накид']],
  ['inc3',   ['aus 1 m 3 m','1 m 3 m herausstr','in 3 m','1 into 3','one into three','из одной три','одна в три']],
