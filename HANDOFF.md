@@ -23,14 +23,14 @@ term for the legend: «Условные обозначения». Keep `tests/i1
 - Count check ("round N doesn't add up") is now non-blocking (triangles/shaped charts legitimately fail it).
 
 ## Known problems / TODO (priority order)
-1. Symbol library (user asked): built-in library of standard meanings so the user is not asked per symbol.
+1. DONE (v1): symbol library in `public/symbols.js` (sets de/jis/us; knit, purl, yo, k2tog, skp, ktbl, k3tog, sk2p, inc3, cable). Matching in reader.js `suggest()`; auto-fill only if d<=0.2 and margin>=0.05, suggestion if d<0.35. Calibrated on real pages with tests/dev/cal.js + sheet.py. Still TODO: learned library in localStorage, more symbols/sets (bobble, purl2tog, cables by width), JIS verification with the Japanese book. Original note: Symbol library (user asked): built-in library of standard meanings so the user is not asked per symbol.
    Researched: Craft Yarn Council (K, P, YO, K2tog, SSK, K3tog, SK2P, S2KP2, inc 1-to-3/4/5, bobble, no-stitch, cables), Japanese JIS L 0201
    (blank=knit, vertical/horizontal bars, O yarn over...), Russian/German conventions. Symbols differ by publisher: key the library by
    symbol SET (jis / cyc / de-book / ru) and match by shape (`sdist` on 14x14 fingerprints against drawn templates), auto-answer when confident,
    still let the user confirm. The German book used in the samples: | knit(1 M re), U yarn over(1 Umschlag), V with 2 = 2 M re zusstr (k2tog),
    down-arrow = 1 überz Abn (slip-knit-pass-over), horizontal dash = 1 M li (purl). Also a learned library in localStorage (store fingerprints of
    confirmed answers and reuse them next time).
-2. Delete button for each marked box (today you can only redraw). Also an "auto-find chart" option.
+2. DONE: delete-box button. TODO:  an "auto-find chart" option.
 3. Groups still over-split on some charts (red lace 10 groups, pink 9); partial-grid warning shows when cov<0.6. Consider matching cells
    by sdist with larger shift tolerance and merging by key text.
 4. Tilt: 1-3 degree tilt of the whole picture can still make grid detection fail; consider row-wise or perspective correction.

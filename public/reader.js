@@ -128,30 +128,34 @@ function dist(a,b){ var d=0,s=0; for(var i=0;i<a.length;i++){ d+=Math.abs(a[i]-b
 
 /* dictionary templates, drawn as simple strokes; printed symbols vary by publisher, so these only *suggest* */
 var TPL=null;
+function drawGlyph(c,ops,k){ c.strokeStyle='#000'; c.fillStyle='#000'; c.lineWidth=3.2*k; c.lineCap='round'; c.lineJoin='round';
+  ops.forEach(function(o){ c.beginPath();
+    if(o[0]==='L'){ c.moveTo(o[1]*k,o[2]*k); c.lineTo(o[3]*k,o[4]*k); c.stroke(); }
+    else if(o[0]==='P'){ o.slice(1).forEach(function(p,i){ if(i) c.lineTo(p[0]*k,p[1]*k); else c.moveTo(p[0]*k,p[1]*k); }); c.stroke(); }
+    else if(o[0]==='C'){ c.arc(o[1]*k,o[2]*k,o[3]*k,0,6.283); c.stroke(); }
+    else if(o[0]==='D'){ c.arc(o[1]*k,o[2]*k,o[3]*k,0,6.283); c.fill(); }
+    else if(o[0]==='U'){ c.moveTo(8*k,6*k); c.lineTo(8*k,15*k); c.arc(14*k,15*k,6*k,Math.PI,0,true); c.lineTo(20*k,6*k); c.stroke(); }
+    else if(o[0]==='T'){ c.font='bold '+(11*k)+'px sans-serif'; c.textAlign='center'; c.fillText(o[1],o[2]*k,o[3]*k); } }); }
 function templates(){
-  if(TPL) return TPL;
-  var defs={
-    knit:function(c){c.moveTo(7,1.5);c.lineTo(7,12.5);},
-    purl:function(c){c.moveTo(1.5,7);c.lineTo(12.5,7);},
-    yo:function(c){c.arc(7,7,4.3,0,6.283);},
-    k2tog:function(c){c.moveTo(2,12);c.lineTo(12,2);},
-    skp:function(c){c.moveTo(2,2);c.lineTo(12,12);},
-    slip:function(c){c.moveTo(2,2);c.lineTo(7,12);c.lineTo(12,2);}
-  };
-  TPL={};
-  Object.keys(defs).forEach(function(k){
-    var cv=document.createElement('canvas'); cv.width=cv.height=N; var c=cv.getContext('2d');
-    c.fillStyle='#fff'; c.fillRect(0,0,N,N); c.strokeStyle='#000'; c.lineWidth=1.6; c.beginPath(); defs[k](c); c.stroke();
-    var d=c.getImageData(0,0,N,N).data, v=new Float32Array(N*N); for(var i=0;i<N*N;i++) v[i]=1-d[4*i]/255;
-    TPL[k]=blur(v); });
+  if(TPL) return TPL; TPL=[];
+  var lib=window.SYMLIB; if(!lib) return TPL;
+  lib.items.forEach(function(it){ it.g.forEach(function(g){
+    var S=84, cv=document.createElement('canvas'); cv.width=cv.height=S; var c=cv.getContext('2d');
+    c.fillStyle='#fff'; c.fillRect(0,0,S,S); drawGlyph(c,g[1],S/28);
+    var d=c.getImageData(0,0,S,S).data, ink=new Uint8Array(S*S); for(var i=0;i<S*S;i++) ink[i]=d[4*i]<128?1:0;
+    TPL.push({id:it.id,set:g[0],v:fingerprint(ink,S,0,0,S,S).v}); }); });
   return TPL;
 }
+var RARE={sk2p:1,k3tog:1,ktbl:1,cable:1,inc3:1};
 function suggest(cl){
   if(cl.kind==='blank') return {label:'blank',score:1};
   if(cl.kind==='filled') return {label:'nostitch',score:1};
-  var t=templates(),best=null;
-  Object.keys(t).forEach(function(k){ var d=dist(cl.v,t[k]); if(!best||d<best.d) best={d:d,label:k}; });
-  return best&&best.d<0.62?{label:best.label,score:1-best.d}:{label:'',score:0};
+  var all=[];
+  templates().forEach(function(t){ var d=sdist(cl.v,t.v); all.push({id:t.id,set:t.set,d:Math.round(d*100)/100,e:d+(RARE[t.id]?0.05:0)}); });
+  all.sort(function(a,b){return a.e-b.e;}); cl.top=all.slice(0,3);
+  var best=all[0]; if(!best) return {label:'',score:0};
+  var second=all.filter(function(a){return a.id!==best.id;})[0], margin=second?second.e-best.e:1;
+  return best.d<0.62?{label:best.id,set:best.set,score:1-best.d,margin:margin}:{label:'',score:0};
 }
 
 function largestBlock(cells){
@@ -233,7 +237,9 @@ function analyzeCore(g,w,h,lenient,kf){
   // fold tiny groups (<=2 cells) into the nearest bigger group of the same kind when they are close enough
   cls.slice().forEach(function(k){
     if(k.kind!=='sym'||k.cells.length>2) return; var best=null;
-    cls.forEach(function(o){ if(o===k||o.kind!=='sym'||o.cells.length<=2) return; var d=sdist(k.v,o.v); if(d<0.5&&(!best||d<best.d)) best={d:d,o:o}; });
+    var sk=suggest(k);
+    cls.forEach(function(o){ if(o===k||o.kind!=='sym'||o.cells.length<=2) return; var d=sdist(k.v,o.v); if(d<0.5&&(!best||d<best.d)){
+      var so=suggest(o); if(sk.label&&so.label&&sk.label!==so.label&&sk.score>=0.6&&so.score>=0.6) return; best={d:d,o:o}; } });
     if(best){ k.cells.forEach(function(q){ q.cl=best.o.id; best.o.cells.push(q); }); cls.splice(cls.indexOf(k),1); } });
   var merged=true;
   while(merged){ merged=false;

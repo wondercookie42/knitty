@@ -96,7 +96,7 @@ table{border-collapse:collapse;font-size:13px} td{border-bottom:1px solid var(--
  </div>
 </div>
 </main>
-<script src="/reader.js"></script>
+<script src="/symbols.js"></script><script src="/reader.js"></script>
 <script>
 (function(){
 var LANGS=[['en','EN'],['ru','RU']];
@@ -111,7 +111,7 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  toolKey:'2. Symbol key (optional)',marked:'✓ marked',notYet:'not yet',
  keyOther:'The symbol key is on another picture',keyNone:'There is no symbol key; I\'ll choose meanings myself',keySkip:'No symbol key: skipped',keyAdded:'Symbol key picture added',
  readBtn:'Read my chart →',whole:'My whole picture is just the chart',
- rotL:'↺ 90°',rotR:'90° ↻',fineT:'Fine tilt',straighten:'Straighten automatically',rotHint:'The photo is tilted? Use the slider or the ±1° buttons for a slow turn. Sideways? Use the 90° buttons. If only the chart is sideways, mark it first, then rotate just the chart.',
+ rotL:'↺ 90°',rotR:'90° ↻',fineT:'Fine tilt',delBox:'✕ Remove this box',straighten:'Straighten automatically',rotHint:'The photo is tilted? Use the slider or the ±1° buttons for a slow turn. Sideways? Use the 90° buttons. If only the chart is sideways, mark it first, then rotate just the chart.',
  markAgain:'Mark again',
  keyT:'Your symbol key',keyFound:'In your symbol key, this symbol is on this line:',keyNo:'I couldn\'t match this symbol to a line of your symbol key. Look through it yourself and find it.',keyLook:'Find this symbol in your symbol key and read what it says.',
  
@@ -129,11 +129,11 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  meet:'Meet your stitches',of:'Symbol {i} of {n}',appears:'appears {n} times (shown on the chart)',
  q:'What does this symbol mean?',looks:'It looks like: {x}. Right?',yes:'Yes, that\'s it',no:'No, pick another',idk:'I\'m not sure',idkS:'I\'ll mark it and we\'ll check later',
  back1:'Back',next:'Next',another:'Choose another picture',
- doneT:'Chart unlocked!',almost:'Almost there',doneOk:'All {n} rounds add up. Your chart makes sense, and I can explain every stitch.',
+ libNote:'From my symbol library ({set}). Check it against your symbol key if you have one.',libAuto:'I filled this in for you; change it if it looks wrong.',doneT:'Chart unlocked!',almost:'Almost there',doneOk:'All {n} rounds add up. Your chart makes sense, and I can explain every stitch.',
  doneBad:'Round {r} doesn\'t add up: it uses {a} stitches but the round below makes {b}. One symbol may have the wrong answer. Go back and check. If the chart is triangular or shaped, this can be normal, and you can still continue.',
  doneUnk:'{n} symbol(s) are marked "not sure". I can\'t explain those yet.',
  start:'Start learning →',review:'Check my answers',tbl:'Show per-round counts',chkPer:'Round {r}: uses {a}, makes {b}',
- L:{knit:['knit','the most common stitch'],purl:['purl','a little bump on the front'],yo:['yarn over','a deliberate hole'],k2tog:['knit 2 together','two stitches become one'],skp:['slip, knit, pass over','two become one, leaning left'],inc3:['one into three','one stitch grows into three'],blank:['empty square','means knit on the front'],nostitch:['no stitch','a filler, skip it'],unknown:['I\'m not sure',''],cable:['cable or crossing','I can\'t explain these yet']}},
+ L:{knit:['knit','the most common stitch'],purl:['purl','a little bump on the front'],yo:['yarn over','a deliberate hole'],k2tog:['knit 2 together','two stitches become one'],skp:['slip, knit, pass over','two become one, leaning left'],ktbl:['knit through back loop','a twisted knit stitch'],k3tog:['three together','three stitches become one'],sk2p:['centered double decrease','slip 1, knit 2 together, pass over'],inc3:['one into three','one stitch grows into three'],blank:['empty square','means knit on the front'],nostitch:['no stitch','a filler, skip it'],unknown:['I\'m not sure',''],cable:['cable or crossing','I can\'t explain these yet']}},
 ru:{h1:'Давайте прочитаем вашу схему',intro:'Загрузите фото или скриншот схемы вязания. Я найду сетку, а вам нужно будет ответить на несколько простых вопросов о символах. Знать вязание для старта не нужно.',
  dropT:'Нажмите, чтобы выбрать фото, или перетащите его сюда',dropS:'Можно и вставить картинку',privacy:'Картинка остаётся на вашем устройстве и никуда не загружается.',exLink:'Или сначала посмотрите готовый пример →',
  back:'← Примеры',s1:'1 Картинка',s2:'2 Разметка',s3:'3 Символы',s4:'4 Готово',
@@ -144,7 +144,7 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  toolKey:'2. Условные обозначения (необязательно)',marked:'✓ отмечено',notYet:'ещё нет',
  keyOther:'Условные обозначения на другой картинке',keyNone:'Условных обозначений нет, значения выберу сам',keySkip:'Без условных обозначений',keyAdded:'Картинка с условными обозначениями добавлена',
  readBtn:'Прочитать схему →',whole:'Вся картинка — это только схема',
- rotL:'↺ 90°',rotR:'90° ↻',fineT:'Точный наклон',straighten:'Выровнять автоматически',rotHint:'Фото наклонено? Крутите ползунок или кнопки ±1° — поворот плавный. Лежит боком? Кнопки 90°. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
+ rotL:'↺ 90°',rotR:'90° ↻',fineT:'Точный наклон',delBox:'✕ Убрать рамку',straighten:'Выровнять автоматически',rotHint:'Фото наклонено? Крутите ползунок или кнопки ±1° — поворот плавный. Лежит боком? Кнопки 90°. Если боком лежит только схема, сначала отметьте её, потом поверните только её.',
  markAgain:'Разметить заново',
  keyT:'Ваши условные обозначения',keyFound:'В ваших условных обозначениях этот символ на такой строке:',keyNo:'Не удалось найти этот символ в строках условных обозначений. Найдите его там сами.',keyLook:'Найдите этот символ в условных обозначениях и прочитайте, что там написано.',
  
@@ -162,14 +162,14 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  meet:'Знакомство с петлями',of:'Символ {i} из {n}',appears:'встречается {n} раз (показано на схеме)',
  q:'Что означает этот символ?',looks:'Похоже на: {x}. Верно?',yes:'Да, верно',no:'Нет, выбрать другое',idk:'Не знаю',idkS:'Отмечу, проверим позже',
  back1:'Назад',next:'Дальше',another:'Выбрать другую картинку',
- doneT:'Схема открыта!',almost:'Почти готово',doneOk:'Все {n} кругов сходятся. Схема понятна, и я могу объяснить каждую петлю.',
+ libNote:'Из моей библиотеки символов ({set}). Если есть условные обозначения, сверьте с ними.',libAuto:'Я заполнил это сам; поменяйте, если не так.',doneT:'Схема открыта!',almost:'Почти готово',doneOk:'Все {n} кругов сходятся. Схема понятна, и я могу объяснить каждую петлю.',
  doneBad:'Круг {r} не сходится: берёт {a} петель, а предыдущий создаёт {b}. Возможно, один символ угадан неверно. Вернитесь и проверьте. Если схема треугольная или с вырезами, это может быть нормально: можно продолжить.',
  doneUnk:'Символов с пометкой «не знаю»: {n}. Их пока объяснить не получится.',
  start:'Начать учиться →',review:'Проверить ответы',tbl:'Показать числа по кругам',chkPer:'Круг {r}: берёт {a}, создаёт {b}',
- L:{knit:['лицевая','самая частая петля'],purl:['изнаночная','маленький бугорок спереди'],yo:['накид','намеренная дырочка'],k2tog:['две вместе лицевой','две петли в одну'],skp:['снять, провязать, протянуть','две в одну, наклон влево'],inc3:['одна в три','из одной петли три'],blank:['пустая клетка','на лицевой стороне это лицевая'],nostitch:['нет петли','заполнитель, пропустить'],unknown:['не знаю',''],cable:['коса или перекрест','пока не умею объяснять']}}
+ L:{knit:['лицевая','самая частая петля'],purl:['изнаночная','маленький бугорок спереди'],yo:['накид','намеренная дырочка'],k2tog:['две вместе лицевой','две петли в одну'],skp:['снять, провязать, протянуть','две в одну, наклон влево'],ktbl:['лицевая за заднюю стенку','скрещенная лицевая'],k3tog:['три вместе','три петли в одну'],sk2p:['центральная убавка','снять 1, две вместе, протянуть'],inc3:['одна в три','из одной петли три'],blank:['пустая клетка','на лицевой стороне это лицевая'],nostitch:['нет петли','заполнитель, пропустить'],unknown:['не знаю',''],cable:['коса или перекрест','пока не умею объяснять']}}
 };
-var IO={knit:[1,1],purl:[1,1],yo:[0,1],k2tog:[2,1],skp:[2,1],inc3:[1/3,1],blank:[1,1],nostitch:[0,0],unknown:[1,1],cable:[1,1]};
-var TOK={knit:'k',blank:'k',cable:'u',purl:'p',yo:'yo',k2tog:'k2tog',skp:'skp',inc3:'I',unknown:'u'};
+var IO={ktbl:[1,1],k3tog:[3,1],sk2p:[3,1],knit:[1,1],purl:[1,1],yo:[0,1],k2tog:[2,1],skp:[2,1],inc3:[1/3,1],blank:[1,1],nostitch:[0,0],unknown:[1,1],cable:[1,1]};
+var TOK={ktbl:'k',k3tog:'u',sk2p:'u',knit:'k',blank:'k',cable:'u',purl:'p',yo:'yo',k2tog:'k2tog',skp:'skp',inc3:'I',unknown:'u'};
 var lang='en'; try{lang=localStorage.getItem('cableBeanieLang')||((navigator.language||'').slice(0,2)==='ru'?'ru':'en');}catch(e){} if(!T[lang]) lang='en';
 function t(k,v){ var s=(T[lang][k]!==undefined?T[lang][k]:T.en[k]); if(s===undefined) return k; if(v&&typeof s==='string') for(var q in v) s=s.split('{'+q+'}').join(v[q]); return s; }
 function $(i){return document.getElementById(i);}
@@ -249,7 +249,7 @@ function readNow(firstTry){
   if(!res.ok){ mode='mark'; failReason=firstTry?'firstFail':res.reason; last=null; render(); return; }
   cv.width=a.width; cv.height=a.height; cv.getContext('2d').drawImage(a,0,0);
   last=res; mode='read'; failReason=null; labels={}; confirmed={}; idx=0; finished=false;
-  res.clusters.forEach(function(k){ if(k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]) labels[k.id]=k.sug.label; });
+  res.clusters.forEach(function(k){ if(k.sug.label&&k.sug.score>=0.8&&k.sug.margin>=0.05&&T.en.L[k.sug.label]){ labels[k.id]=k.sug.label; k.auto=true; } });
   // key
   keyCv=null; keyInfo=null;
   var kb=boxes.key, ks=keySrc||src;
@@ -302,7 +302,7 @@ function render(){
   var q=ask(), n=q.length;
   if(!n){ finished=true; steps(); doneView(rows); return; }
   idx=Math.max(0,Math.min(idx,n-1));
-  var k=q[idx], cur=labels[k.id], sug=k.sug&&k.sug.label&&k.sug.score>=0.6&&T.en.L[k.sug.label]?k.sug.label:null, prevName=nearestNamed(k); if(prevName&&!confirmed[k.id]){ sug=prevName; } 
+  var k=q[idx], cur=labels[k.id], sug=k.sug&&k.sug.label&&k.sug.score>=0.65&&T.en.L[k.sug.label]?k.sug.label:null, prevName=nearestNamed(k); if(prevName&&!confirmed[k.id]){ sug=prevName; } 
   paintCells(k.id);
   var dots=q.map(function(o,i){return '<button data-i="'+i+'" class="'+(i===idx?'on ':'')+(labels[o.id]?'set':'')+'" aria-label="'+t('of',{i:i+1,n:n})+'"></button>';}).join('');
   var h='<div class="card pop" id="qc" style="display:grid;gap:14px"><div class="muted" style="font-size:14px">'+t('of',{i:idx+1,n:n})+'</div>'+
@@ -311,9 +311,9 @@ function render(){
   var km=matchKey(k);
   if(keyCv){ h+='<div class="msg" style="display:grid;gap:8px"><b>'+(km?t('keyFound'):t('keyNo'))+'</b>'+(km?'<div class="keybox" style="max-height:110px"><canvas id="lineView"></canvas></div>':'')+'<span class="muted" style="font-size:14px">'+t('keyLook')+'</span></div>'; }
   if(sug&&!labels['_pick'+k.id]){
-    h+='<div class="msg"><div class="row" style="gap:6px">'+glyphs(sug)+'</div><b>'+t('looks',{x:t('L')[sug][0]})+'</b>'+(prevName&&!confirmed[k.id]&&sug===prevName?'<div class="muted" style="font-size:14px">'+t('sameAs')+'</div>':'')+'<div class="row" style="margin-top:10px"><button class="btn" data-yes="'+sug+'">'+t('yes')+'</button><button class="btn sec" data-no="1">'+t('no')+'</button></div></div>';
+    h+='<div class="msg"><div class="row" style="gap:6px">'+glyphs(sug)+'</div><b>'+t('looks',{x:t('L')[sug][0]})+'</b>'+(prevName&&!confirmed[k.id]&&sug===prevName?'<div class="muted" style="font-size:14px">'+t('sameAs')+'</div>':'')+(!(prevName&&sug===prevName)&&k.sug&&k.sug.set&&k.sug.label===sug&&window.SYMLIB?'<div class="muted" style="font-size:14px">'+t('libNote',{set:SYMLIB.sets[k.sug.set][lang]})+(k.auto?' '+t('libAuto'):'')+'</div>':'')+'<div class="row" style="margin-top:10px"><button class="btn" data-yes="'+sug+'">'+t('yes')+'</button><button class="btn sec" data-no="1">'+t('no')+'</button></div></div>';
   }else{
-    h+='<div class="tiles">'+['knit','purl','yo','k2tog','skp','inc3','cable','blank','nostitch','unknown'].map(function(o){return '<button class="tile" data-set="'+o+'"'+(cur===o?' style="border-color:var(--accent);background:var(--soft)"':'')+'><span class="gl">'+glyphs(o)+'</span><b>'+t('L')[o][0]+'</b>'+(t('L')[o][1]?'<small>'+t('L')[o][1]+'</small>':'')+'</button>';}).join('')+'</div>';
+    h+='<div class="tiles">'+['knit','purl','yo','k2tog','skp','ktbl','k3tog','sk2p','inc3','cable','blank','nostitch','unknown'].map(function(o){return '<button class="tile" data-set="'+o+'"'+(cur===o?' style="border-color:var(--accent);background:var(--soft)"':'')+'><span class="gl">'+glyphs(o)+'</span><b>'+t('L')[o][0]+'</b>'+(t('L')[o][1]?'<small>'+t('L')[o][1]+'</small>':'')+'</button>';}).join('')+'</div>';
   }
   h+='<div class="row" style="justify-content:space-between"><div class="dots">'+dots+'</div><div class="row">'+(idx>0?'<button class="btn sec" data-nav="-1">'+t('back1')+'</button>':'')+(cur&&idx<n-1?'<button class="btn" data-nav="1">'+t('next')+'</button>':'')+(cur&&idx===n-1?'<button class="btn" data-fin="1">'+t('start')+'</button>':'')+'</div></div></div>';
   h+='<div class="msg">'+t('found',{rows:rows.length,cells:last.cells.length})+(last.warn?' '+t('warnBlur'):'')+'</div>'+(last.partial?'<div class="msg bad"><b>'+t('partialW')+'</b></div>':'');
@@ -327,7 +327,7 @@ function render(){
 }
 function prevHTML(k){
   var b=boxes[k]; if(!b||(k==='key'&&keySrc&&false)) return '';
-  return '<div class="msg" style="display:grid;gap:8px"><b>'+t(TN[k])+'</b><div class="keybox" style="max-height:150px"><canvas data-prev="'+k+'"></canvas></div><div class="row"><button class="btn sec" data-rot="'+k+':-90" style="padding:6px 12px;font-size:14px">'+t('rotL')+'</button><button class="btn sec" data-rot="'+k+':90" style="padding:6px 12px;font-size:14px">'+t('rotR')+'</button></div><div class="fine"><button class="btn sec" data-rot="'+k+':-1" style="padding:6px 10px;font-size:14px">−1°</button><input type="range" data-fine="'+k+'" min="-45" max="45" step="0.5" value="'+fineOf(b.rot||0)+'" aria-label="'+t('fineT')+'"><button class="btn sec" data-rot="'+k+':1" style="padding:6px 10px;font-size:14px">+1°</button><output data-fv="'+k+'">'+fmt(fineOf(b.rot||0))+'</output></div><span class="muted" style="font-size:13px">'+t('prevHint')+'</span></div>';
+  return '<div class="msg" style="display:grid;gap:8px"><b>'+t(TN[k])+'</b><div class="keybox" style="max-height:150px"><canvas data-prev="'+k+'"></canvas></div><div class="row"><button class="btn sec" data-rot="'+k+':-90" style="padding:6px 12px;font-size:14px">'+t('rotL')+'</button><button class="btn sec" data-rot="'+k+':90" style="padding:6px 12px;font-size:14px">'+t('rotR')+'</button></div><div class="fine"><button class="btn sec" data-rot="'+k+':-1" style="padding:6px 10px;font-size:14px">−1°</button><input type="range" data-fine="'+k+'" min="-45" max="45" step="0.5" value="'+fineOf(b.rot||0)+'" aria-label="'+t('fineT')+'"><button class="btn sec" data-rot="'+k+':1" style="padding:6px 10px;font-size:14px">+1°</button><output data-fv="'+k+'">'+fmt(fineOf(b.rot||0))+'</output></div><span class="muted" style="font-size:13px">'+t('prevHint')+'</span><div><button class="btn sec" data-del="'+k+'" style="padding:6px 12px;font-size:14px">'+t('delBox')+'</button></div></div>';
 }
 function addRot(k,d){ var bx=boxes[k]; if(!bx) return; bx.rot=norm((bx.rot||0)+d);
   if(k==='chart'){ if(boxes.key&&!keySrc) boxes.key.rot=norm((boxes.key.rot||0)+d); if(boxes.text) boxes.text.rot=norm((boxes.text.rot||0)+d); } }
@@ -343,6 +343,7 @@ var GL={
   knit:['<path d="M14 6V22"/>',''], purl:['<path d="M6 14H22"/>','<circle cx="14" cy="14" r="2.6" fill="currentColor"/>'],
   yo:['<circle cx="14" cy="14" r="6"/>','<path d="M8 6V15A6 6 0 0 0 20 15V6"/>'],
   k2tog:['<path d="M7 22L21 6"/>','<path d="M7 7L14 22L21 7"/>'], skp:['<path d="M7 6L21 22"/>','<path d="M14 5V21M9 16L14 21L19 16"/>'],
+  ktbl:['<path d="M20 6L8 14L20 22"/>'], k3tog:['<path d="M7 7L14 22L21 7"/>','<text x="14" y="14" text-anchor="middle" font-size="10" fill="currentColor" stroke="none">3</text>'], sk2p:['<path d="M14 23V6M9 12L14 6L19 12"/>'],
   inc3:['<path d="M4 21Q14 29 24 21"/><path d="M14 6V19"/>'], cable:['<path d="M6 6L22 22M22 6L6 22"/>'],
   blank:[''], nostitch:['<rect x="3" y="3" width="22" height="22" fill="currentColor" opacity=".25" stroke="none"/>'],
   unknown:['<text x="14" y="21" text-anchor="middle" font-size="18" fill="currentColor" stroke="none">?</text>']};
@@ -362,6 +363,7 @@ $('side').addEventListener('click',function(e){
   if(mode==='mark'){
     if(b.dataset.tool){ tool=b.dataset.tool; render(); }
     else if(b.dataset.rot){ var pr=b.dataset.rot.split(':'); var bx=boxes[pr[0]]; if(bx){ addRot(pr[0],+pr[1]); } render(); }
+    else if(b.dataset.del){ var dk=b.dataset.del; boxes[dk]=null; if(dk==='key'){ keySrc=null; } tool=dk; render(); }
     else if(b.dataset.nokey){ noKey=true; boxes.key=null; keySrc=null; tool='chart'; render(); }
     else if(b.dataset.read){ readNow(false); }
     else if(b.dataset.whole){ boxes.chart=null; readNow(false); }
