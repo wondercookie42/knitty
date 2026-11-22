@@ -88,6 +88,8 @@ function bandCov(ink,w,h,fixed,a,b,horiz,band){
     hit+=v; }
   return tot?hit/tot:0;
 }
+/* look a few pixels either side of the expected line for where the printed line really is (thin band, best coverage) */
+function bestEdge(ink,w,h,fixed,a,b,horiz,sr){ var best={c:-1,p:fixed},d,cv; for(d=-sr;d<=sr;d++){ cv=bandCov(ink,w,h,fixed+d,a,b,horiz,1); if(cv>best.c+0.02||(Math.abs(cv-best.c)<=0.02&&Math.abs(d)<Math.abs(best.p-fixed))) best={c:cv,p:fixed+d}; } return best; }
 function fingerprint(ink,w,x0,y0,x1,y1){
   var ins=0.15*(x1-x0), ax=x0+ins, bx=x1-ins, ay=y0+ins, by=y1-ins, v=new Float32Array(N*N), c=new Float32Array(N*N);
   for(var y=Math.ceil(ay);y<by;y++) for(var x=Math.ceil(ax);x<bx;x++){
@@ -152,6 +154,9 @@ function largestBlock(cells){
     if(comp.length>best.length) best=comp; });
   return best;
 }
+/* follow the real printed lines where the photo is slightly curved or tilted: pull each lattice line to the nearest detected line (within 20% of a cell) */
+function snapTo(pos,peaksList,m){ var out=pos.map(function(p){ var best=null; peaksList.forEach(function(q){ var d=Math.abs(q.p-p); if(d<0.2*m&&(!best||d<best.d)) best={d:d,p:q.p}; }); return best?best.p:p; });
+  for(var i=1;i<out.length;i++) if(out[i]-out[i-1]<0.6*m) out[i]=out[i-1]+m; return out; }
 function analyzeCore(g,w,h,lenient){
   var res={w:w,h:h,metrics:{}}, mn=Math.min(w,h);
   if(mn<200) return fail('tooSmall');
@@ -160,7 +165,13 @@ function analyzeCore(g,w,h,lenient){
   var ink=binarize(g,w,h), L=Math.max(18,Math.round(0.03*mn)), sc=lineScores(ink,w,h,L);
   var py=peaks(sc.hs,0.25,L*3), px=peaks(sc.vs,0.25,L*3);
   function withDouble(list){ var o=list.slice(); list.forEach(function(f){ o.push({a:f.a,m:f.m*2,n:f.n/2,sc:f.sc*0.9}); o.push({a:f.a+f.m,m:f.m*2,n:f.n/2,sc:f.sc*0.9}); }); return o; }
-  var cy=withDouble(fitLattice(py)), cx=withDouble(fitLattice(px));
+  // a lattice whose half-way positions also carry grid lines is too coarse (each "cell" would hold 2x2 real squares): use half the pitch
+  function at(arr,p){ var i=Math.round(p),m=0,d; for(d=-2;d<=2;d++){ var v=arr[i+d]; if(v>m) m=v; } return m; }
+  function fixHalf(list,arr){ return list.map(function(f){ var main=0,mid=0,k,n=0;
+      for(k=0;;k++){ var p=f.a+k*f.m; if(p>=arr.length-3) break; if(p>=3){ main+=at(arr,p); mid+=at(arr,p+f.m/2); n++; } }
+      for(k=-1;;k--){ var p2=f.a+k*f.m; if(p2<3) break; main+=at(arr,p2); mid+=at(arr,p2+f.m/2); n++; }
+      if(n>=3&&main>0&&mid/main>0.8&&f.m/2>=8){ return {a:f.a,m:f.m/2,n:f.n*2,sc:f.sc,half:true}; } return f; }); }
+  var cy=fixHalf(withDouble(fitLattice(py)),sc.hs), cx=fixHalf(withDouble(fitLattice(px)),sc.vs);
   res.metrics.hLines=py.length; res.metrics.vLines=px.length;
   if(!cx.length||!cy.length) return fail(sharp<25?'blurry':(py.length+px.length<4?'noGrid':'irregular'));
   var mxx=Math.max.apply(null,cx.map(function(f){return f.sc;})), myy=Math.max.apply(null,cy.map(function(f){return f.sc;})), pairs=[];
@@ -171,13 +182,15 @@ function analyzeCore(g,w,h,lenient){
   for(pi=0;pi<Math.min(10,pairs.length);pi++){
     fx=pairs[pi].fx; fy=pairs[pi].fy;
     xs=latticePositions(fx,w); ys=latticePositions(fy,h);
+    xs=snapTo(xs,px,fx.m); ys=snapTo(ys,py,fy.m);
     if(xs.length>120||ys.length>160){ continue; }
-    var cs=[],r,c,band=Math.max(2,Math.round(0.07*Math.min(fx.m,fy.m)));
+    var cs=[],r,c,band=Math.max(2,Math.round(0.28*Math.min(fx.m,fy.m)));
     for(r=0;r<ys.length-1;r++) for(c=0;c<xs.length-1;c++){
-      var x0=xs[c],x1=xs[c+1],y0=ys[r],y1=ys[r+1],
-        cov=[bandCov(ink,w,h,y0,x0+3,x1-3,true,band),bandCov(ink,w,h,y1,x0+3,x1-3,true,band),
-             bandCov(ink,w,h,x0,y0+3,y1-3,false,band),bandCov(ink,w,h,x1,y0+3,y1-3,false,band)],
-        sides=cov.filter(function(q){return q>=0.6;}).length;
+      var x0=xs[c],x1=xs[c+1],y0=ys[r],y1=ys[r+1],sr=Math.max(2,Math.round(0.2*Math.min(fx.m,fy.m))),
+        eT=bestEdge(ink,w,h,y0,x0+3,x1-3,true,sr), eB=bestEdge(ink,w,h,y1,x0+3,x1-3,true,sr),
+        eL=bestEdge(ink,w,h,x0,y0+3,y1-3,false,sr), eR=bestEdge(ink,w,h,x1,y0+3,y1-3,false,sr),
+        cov=[eT.c,eB.c,eL.c,eR.c], sides=cov.filter(function(q){return q>=0.6;}).length;
+      if(eT.c>=0.6) y0=eT.p; if(eB.c>=0.6) y1=eB.p; if(eL.c>=0.6) x0=eL.p; if(eR.c>=0.6) x1=eR.p;
       var fp0=sides>=3?fingerprint(ink,w,x0,y0,x1,y1):null;
       if(fp0&&(sides>=4||fp0.mean>=0.03)){ var fp=fp0;
         cs.push({s:sides,r:r,c:c,x0:x0,y0:y0,x1:x1,y1:y1,v:fp.v,mean:fp.mean,kind:fp.mean<0.03?'blank':(fp.mean>0.5?'filled':'sym')}); } }
@@ -192,7 +205,7 @@ function analyzeCore(g,w,h,lenient){
   var sym=cells.filter(function(q){return q.kind==='sym';}).length;
   if(sym<3) return fail('noSymbols');
   if(sharp<25) res.warn='blurry';
-  var lat=Math.max(1,(xs.length-1)*(ys.length-1)); res.metrics.cov=Math.round(cells.length/lat*100)/100; if(res.metrics.cov<0.6) res.partial=true;
+  var lat=Math.max(1,(xs.length-1)*(ys.length-1)); res.metrics.cov=Math.round(cells.length/lat*100)/100; if(res.metrics.cov<0.2&&!lenient) return fail('irregular'); if(res.metrics.cov<0.6) res.partial=true;
   // clusters
   var filled=cells.filter(function(q){return q.kind==='filled';}).length;
   if(filled>0.5*cells.length) return fail('photo');

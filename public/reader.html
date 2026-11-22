@@ -124,7 +124,7 @@ en:{h1:'Let\'s read your chart',intro:'Drop in a photo or screenshot of a knitti
  irregular:'I see lines, but they don\'t form an even grid. Maybe the page is curved or tilted. A flat photo taken straight from above works best.',
  noSymbols:'I found a grid but nearly all cells are empty. Is the picture too faint, or is this a blank template?',
  photo:'This looks like a picture of something else, not a chart. Draw a box around the chart, or choose another picture.',
- partialW:'Only part of the chart grid was found, so some squares may be misread. Go back ("Mark again"), tilt the picture a little with the slider until the lines look straight, and try again.',partialW:'Найдена только часть сетки схемы, поэтому часть клеток может читаться неверно. Вернитесь («Разметить заново»), чуть наклоните картинку ползунком, пока линии не станут ровными, и попробуйте снова.',warnBlur:'The picture is a bit soft, so double-check my guesses.',
+ partialW:'Only part of the chart grid was found, so some squares may be misread. Go back ("Mark again"), tilt the picture a little with the slider until the lines look straight, and try again.',warnBlur:'The picture is a bit soft, so double-check my guesses.',
  found:'I found your chart: {rows} rounds and {cells} squares.',
  meet:'Meet your stitches',of:'Symbol {i} of {n}',appears:'appears {n} times (shown on the chart)',
  q:'What does this symbol mean?',looks:'It looks like: {x}. Right?',yes:'Yes, that\'s it',no:'No, pick another',idk:'I\'m not sure',idkS:'I\'ll mark it and we\'ll check later',
@@ -157,7 +157,7 @@ ru:{h1:'Давайте прочитаем вашу схему',intro:'Загру
  irregular:'Линии вижу, но ровной сетки они не дают. Возможно, страница изогнута или наклонена. Лучше всего плоское фото строго сверху.',
  noSymbols:'Сетка есть, но почти все клетки пустые. Картинка слишком бледная или это пустой шаблон?',
  photo:'Похоже, это фотография чего-то другого, а не схема. Обведите схему рамкой или выберите другую картинку.',
- warnBlur:'Снимок немного мягкий, поэтому проверьте мои догадки.',
+ partialW:'Найдена только часть сетки схемы, поэтому часть клеток может читаться неверно. Вернитесь («Разметить заново»), чуть наклоните картинку ползунком, пока линии не станут ровными, и попробуйте снова.',warnBlur:'Снимок немного мягкий, поэтому проверьте мои догадки.',
  found:'Схема найдена: кругов {rows}, клеток {cells}.',
  meet:'Знакомство с петлями',of:'Символ {i} из {n}',appears:'встречается {n} раз (показано на схеме)',
  q:'Что означает этот символ?',looks:'Похоже на: {x}. Верно?',yes:'Да, верно',no:'Нет, выбрать другое',idk:'Не знаю',idkS:'Отмечу, проверим позже',
@@ -413,7 +413,7 @@ function go(){
     b.rot=(tool!=='chart'&&boxes.chart)?boxes.chart.rot:0; boxes[tool]=b; if(tool==='key') keySrc=null; if(tool==='chart'&&!boxes.key&&!noKey) tool='key'; failReason=null; render(); });
 })();
 statics();
-window.__readerDebug=function(){return {last:last,labels:labels};};
+window.__readerDebug=function(){return {last:last,labels:labels,failReason:failReason,region:function(){return prep(regionOf(src,boxes.chart),3);}};};
 })();
 </script>
 </body>
